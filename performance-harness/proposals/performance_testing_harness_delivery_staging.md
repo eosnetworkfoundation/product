@@ -5,9 +5,9 @@ Staged roadmap for the development of a **Performance Testing Harness**.
 Requirements are being curated for the development of a performance testing and evaluation harness here: [Performace Testing Harness Requirements](https://github.com/eosnetworkfoundation/product/tree/main/performance-harness/proposals)
 
 
----
+
 ## MVP
----
+
 
 ### Transaction Source
 
@@ -73,9 +73,9 @@ Requirements are being curated for the development of a performance testing and 
 
 ### User Documentation
 
----
+
 ## Stage 2
----
+
 
 ### Expand Transaction generator
 
@@ -105,9 +105,9 @@ Requirements are being curated for the development of a performance testing and 
 
 -   Number of complete windows
 
----
+
 ## Stage 3
----
+
 
 ### HTTP harness testing
 
@@ -131,7 +131,7 @@ Requirements are being curated for the development of a performance testing and 
 
 -   Availability of data from web
 
----
+
 ## Additional Planned Development (To Prioritize and Stage)
----
+
 -   *Work in progress*
