@@ -12,36 +12,24 @@ Requirements are being curated for the development of a performance testing and 
 ### Transaction Source
 
 -   Transaction generator
-
     -   minimal
-
     -   most likely just transfers
-
     -   p2p format using net plugin
-
     -   configurable
-
         -   Token transfers per second (tps) for generating
         -   number of threads
-
     -   tracks generation rate
-
         -   exit on poor performance
         -   report if Source or Provider is at fault
-
 -   Transaction Provider
-
     -   establishes p2p connection to net_plugin
-
     -   configurable
-
         -   number of connections (to the same nodeos)
         -   configurable number of threads
 
 ### Run Harness
 
 -   python script
-
     -   setup environment
     -   launch nodeos node(s)
     -   run Transaction Sources
@@ -52,23 +40,15 @@ Requirements are being curated for the development of a performance testing and 
 ### Output Evaluation
 
 -   python script
-
     -   scrape nodeos logs
-
     -   evaluate
-
         -   min
         -   max
         -   standard deviation
-
     -   Capture of logs
-
     -   Reporting of configurations and run env to CSV report
-
         -   Nodeos version, configuration options, env, etc
-
     -   TPS Scoring
-
         -   Standard deviation, mean, average (basic stats)
 
 ### User Documentation
@@ -80,7 +60,6 @@ Requirements are being curated for the development of a performance testing and 
 ### Expand Transaction generator
 
 -   configurable
-
     -   number of accounts
 
 ### Expand MVP to support multi-producer setup
@@ -95,16 +74,11 @@ Requirements are being curated for the development of a performance testing and 
 ### Expand reporting to include multiple nodes
 
 -   Number of Forks
-
 -   Number of dropped blocks
-
     -   Missed blocks
     -   Forked blocks
-
 -   Number of dropped transactions
-
 -   Number of complete windows
-
 
 ## Stage 3
 
