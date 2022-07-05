@@ -4,18 +4,14 @@ Gathering requirements for a performance testing and evaluation harness.  Requir
 
 Additional requirements may be proposed for inclusion in ongoing or future stages.
 
-
 ## Known Spikes
-
 
 -   SPIKE: Investigate OpenDDS performance framework for ideas
 -   SPIKE: Investigate HTTP performance frameworks
 -   SPIKE: Investigate distributed performance tracing/bottlenecks (more
     code/finer grained results) e.g. Zipkin
 
-
 ## Cloud Infrastructure
-
 
 -   Create Cloud Infrastructure
     -   Hosting 
@@ -27,9 +23,7 @@ Additional requirements may be proposed for inclusion in ongoing or future stage
         -   Helm, Ansible, Puppet, Chef, Gitlab CI, Jenkins, Terraform, etc. 
             -   NOTE: some include deployment as their feature set. 
 
-
 ## Reporting
-
 
 -   Create reporting template
     -   Customize text and charts for various audiences
@@ -42,9 +36,7 @@ Additional requirements may be proposed for inclusion in ongoing or future stage
         software versions
     -   Create reports based on environments
 
-
 ## Multi and Single Node Testing
-
 
 -   HTTP API RPC endpoint testing
 -   Modify on-chain parameters
@@ -53,7 +45,6 @@ Additional requirements may be proposed for inclusion in ongoing or future stage
 -   Nodeos configurations (customizable at run time)
     -   User configurable (not just hard-coded run types)
         -   Example: EOS WASM VM: Jit, eos-vm-oc
-
 -   Induce artificial network latency between "machine" and/or container instances (network interfaces)
 -   Transaction generation
     -   Multi-node send to multiple nodeos
@@ -76,7 +67,6 @@ Additional requirements may be proposed for inclusion in ongoing or future stage
     -   DB intense action
     -   EOS mechanics:
         [*Aloha EOS Block Producer Benchmarks*](https://www.alohaeos.com/tools/benchmarks)
-
 -   Contract testing scenarios:
     -   Run on empty state
     -   Run on large backlog
