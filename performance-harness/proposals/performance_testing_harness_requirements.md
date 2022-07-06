@@ -67,6 +67,7 @@ Additional requirements may be proposed for inclusion in ongoing or future stage
     -   DB intense action
     -   EOS mechanics:
         [*Aloha EOS Block Producer Benchmarks*](https://www.alohaeos.com/tools/benchmarks)
+        [*EOS Mechanics Github*](https://github.com/AlohaEOS/eos-mechanics)
 -   Contract testing scenarios:
     -   Run on empty state
     -   Run on large backlog

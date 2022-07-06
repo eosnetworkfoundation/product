@@ -40,19 +40,25 @@ Requirements are being curated for the development of a performance testing and 
 ### Output Evaluation
 
 -   python script
+    -   capture of logs
     -   scrape nodeos logs
     -   evaluate
         -   min
         -   max
         -   standard deviation
-    -   Capture of logs
     -   Reporting of configurations and run env to CSV report
         -   Nodeos version, configuration options, env, etc
     -   TPS Scoring
         -   Standard deviation, mean, average (basic stats)
 
-### User Documentation
+### User Documentation & Testing & Baseline Evaluation
 
+-   How to:
+    -   setup
+    -   run the performance harness tests
+    -   gather results
+    -   access/intepret results
+    -   describe what is available
 
 ## Stage 2
 
@@ -91,7 +97,7 @@ Requirements are being curated for the development of a performance testing and 
 
 -   EOS mechanics
 
-### Manual cli deployment to auto deployment
+### Migrate from manual cli deployment to auto deployment
 
 -   Use of Ansible or similar
 -   Provide barebones "gui" for changing configuration
@@ -104,8 +110,29 @@ Requirements are being curated for the development of a performance testing and 
 ### Storage of historical data for comparison
 
 -   Availability of data from web
+-   Github pages? GCP?
 
 
 ## Additional Planned Development (To Prioritize and Stage)
 
--   *Work in progress*
+-   Cloud infrastructure support
+    -   Ease of deployment/teardown
+    -   Ease of scaling
+    -   Pinned environment support
+-   Reporting
+    -   Additional charts/histograms
+    -   Support multiple output formats
+-   Multi & Single Node Testing improvements
+    -   Increase available testing configurations
+    -   Increase the usability of configuration
+    -   Artificial network latency
+    -   Improve Transaction Generation capabilities
+    -   Performance monitoring/comparison with feature releases
+    -   Increase Contract Action coverage
+    -   Increase Contract Testing scenarios
+    -   Coverage of running on different states
+    -   Replay performance testing
+    -   Increase testing/measuring for stability
+-   Metrics
+    -   Continue to improve metrics collected and reported on
+    -   Build historical metric comparison
