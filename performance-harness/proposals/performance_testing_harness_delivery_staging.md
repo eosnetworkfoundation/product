@@ -86,6 +86,12 @@ Requirements are being curated for the development of a performance testing and 
 -   Number of dropped transactions
 -   Number of complete windows
 
+### Begin Design Planning for migration to auto deployment
+
+-   Building architectural/design doc
+-   Evaluation of technologies
+-   Recommendation for technologies to use
+
 ## Stage 3
 
 
@@ -99,7 +105,7 @@ Requirements are being curated for the development of a performance testing and 
 
 ### Migrate from manual cli deployment to auto deployment
 
--   Use of Ansible or similar
+-   Use of Ansible or similar (Chef, Terraform, etc.)
 -   Provide barebones "gui" for changing configuration
 
 ### Increase output evaluation statistics
