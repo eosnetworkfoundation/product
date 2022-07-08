@@ -6,11 +6,11 @@ In addition, other related software that may not strictly be included as part of
 
 The changes are organized into the one of the following categories based on the area for which the protocol change primarily adds value:
 
-* [Development utility](#development-utility)
-* [Operational efficiency](#operational-efficiency)
-* [User convenience](#user-convenience)
-* [Complexity reduction](#complexity-reduction)
-* [Economics and governance](#economics-and-governance)
+* [Development utility](#development-utility-du)
+* [Operational efficiency](#operational-efficiency-eo)
+* [User convenience](#user-convenience-uc)
+* [Complexity reduction](#complexity-reduction-cr)
+* [Economics and governance](#economics-and-governance-eg)
 
 ## Development utility (DU)
 
