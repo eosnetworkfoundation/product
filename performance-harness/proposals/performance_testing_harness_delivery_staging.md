@@ -2,7 +2,7 @@
 
 Staged roadmap for the development of a **Performance Testing Harness**.
 
-Requirements are being curated for the development of a performance testing and evaluation harness here: [Performace Testing Harness Requirements](https://github.com/eosnetworkfoundation/product/tree/main/performance-harness/proposals)
+Requirements are being curated for the development of a performance testing and evaluation harness here: [Performance Testing Harness Requirements](https://github.com/eosnetworkfoundation/product/tree/main/performance-harness/proposals)
 
 
 
@@ -105,7 +105,7 @@ Requirements are being curated for the development of a performance testing and 
 
 ### Migrate from manual cli deployment to auto deployment
 
--   Use of Ansible or similar (Chef, Terraform, etc.)
+-   Use of Ansible and Terraform or similar
 -   Provide barebones "gui" for changing configuration
 
 ### Increase output evaluation statistics
@@ -142,3 +142,8 @@ Requirements are being curated for the development of a performance testing and 
 -   Metrics
     -   Continue to improve metrics collected and reported on
     -   Build historical metric comparison
+-   Administration Portal
+    -   configure Performance Test Harness
+    -   run performance test harness
+    -   run pinned configurations
+    -   UI/UX design
