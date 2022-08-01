@@ -3,11 +3,19 @@ name: Feature request
 about: Suggest an idea for this project
 title: ''
 labels: ''
-assignees: ''
+assignees: stephenpdeos
 
 ---
 
-**Is your feature request related to a problem? Please describe.**
+**What part of the community is encountering a problem/challenge?**
+Select all relevant options.
+[ ] Block producers
+[ ] Exchanges
+[ ] Developers
+[ ] Token holders
+[ ] Other (if selected, please specify below)
+
+**What is the problem/challenge?**
 A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
 
 **Describe the solution you'd like**
