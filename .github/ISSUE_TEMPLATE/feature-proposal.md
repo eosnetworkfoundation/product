@@ -18,6 +18,9 @@ Select all relevant options.
 **What is the problem/challenge?**
 A clear and concise description of what the problem is.
 
+**Why is this an important problem/challenge to solve? Why should we solve it now?**
+A clear and concise description of why the problem is important.
+
 **Describe the solution you would like to propose**
 A clear and concise description of what you want to happen.
 
