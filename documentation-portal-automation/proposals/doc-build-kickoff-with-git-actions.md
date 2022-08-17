@@ -18,7 +18,14 @@ The right hook for integration is when there is a major update to the code, or a
 4. Teams own repos, and they decide which actions should update the documentation
 
 ## Architecture Overview
-
+```mermaid
+graph LR;
+    Repo1-->DocService;
+    Repo2-->DocService;
+    Repo3-->DocService;
+    DocService-->RedisJobQueue;
+    DocService-->HTML;
+```
 * Repos -> notify -> Documenation Portal
 * Documentation Portal 
    - clones repo
