@@ -39,14 +39,50 @@ graph LR;
 * DocService processes repo and creates HTML Documentation
 
 ## API
-API is a HTTPS request. You can write your own script or utilize a market place script like [http-request-action](https://github.com/fjogeleit/http-request-action). 
+API is a HTTPS request. For github integration repo owners can write your own script or utilize a marketplace script like [http-request-action](https://github.com/fjogeleit/http-request-action). 
 
-### Required Parameters
+### URL Format and Overview
+
+The url to trigger a documentation build. 
+```
+URL: http://docservice.eosnetwork.com/update/git-owner/git-repo
+Action: POST
+Authorization: [Basic <digest> | Bearer <token>] 
+Body: [branch: value] [tag: value]
+```
+The values in the body are optional. When no branch or tag is specified the documentation service will default to `main`. The optional body values are space seperated. `branch:` and `tag:` are literal values. An example of a body would be:
+```
+branch: release5
+```
 
 
-### Optional Parameters
+### Required Arguments
 
-### Authentication
+The Authorization headers are required. Either form of authorization, `Basic` or `Bearer`, may be used. 
+
+### Optional Arguments
+
+The only optional values are passed in the body as space seperate name/value pairs. Branch and tag are used to checkout code from git repos. 
+* No branch or tag provided
+`git checkout`
+* Branch provided no tag
+`git checkout -b <branch>`
+* Branch and tag 
+`git checkout tags/<tag> -b <branch>`
+* No Branch and tag. Puts local repo in detached HEAD state. Ok because it is read only.
+`git checkout <tag>`
+
+### Authorization
+
+Authorization is done over HTTPS. The tokens and digests provided are not encrypted. Therefore the encryption provided by HTTPS is a must. Two different types of authentication are supported.
+* Basic: a username and password are encoded together into a digest string. The HTTP client needs create the digest before making the call to the server.
+* Bearer: an unmodified token is passed
+
+Teams should manage their secretes appropriately. 
+
+### HTTP Spec and Return Codes
+
+Will be posted as documentation once the first release is ready.
 
 ## Documentation Versions 
 
