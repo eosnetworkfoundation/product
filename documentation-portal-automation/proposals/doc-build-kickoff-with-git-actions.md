@@ -5,38 +5,44 @@
 
 ## Overview
 
-One service will pull together documenation from various repos, process it, and assemble it into a single documenation portal. The portal currently processes markdown documents into HTML, and uses various software packages to create HTML documents from code.
+One service will pull together documenation from various repos, process it, and assemble it into a single documenation portal. The portal currently processes documents into HTML, and uses various software packages to create HTML documents from code.
+* MDX for Markdown
 * Doxygen for C/C++
 * Typedoc for Typescript
 * Javadoc for Java
 * OpenAPI for HTTP methods 
 
-The right hook for integration is when there is a major update to the code, or a new release is created. Both of these action originate in *github*. This sets up a situation where many different repos need to come together into a coheasive, single documentation portal. This proposal lays out the following integration and archiecture:
+Documentation should be updated when there is a major update or a new release. In our organization, both of these action originate in *github*. This sets up a situation where many different repos need to come together into a coheasive, single documentation portal. This proposal lays out the following principles:
 1. Git hub actions are the signal for document updates
 2. There are many seperate repositories with documentation and code 
-3. The best integrate is for the documentation portal pull down the repository and process any updates
-4. Teams own repos, and they decide which actions should update the documentation
+3. Teams own repos, and they decide which actions should update the documentation
 
 ## Architecture Overview
 ```mermaid
 graph LR;
-    Repo1-->DocService;
-    Repo2-->DocService;
-    Repo3-->DocService;
-    DocService-->RedisJobQueue;
-    DocService-->HTML;
+    subgraph sys1 [DocService]
+    WebService-->RedisJobQueue[(RedisJobQueue)];
+    WebService-->HTML;
+    end
+    subgraph enf [EOS Networt Foundation]
+    Repo1-->|HTTP|WebService;
+    Repo2-->|HTTP|WebService;
+    end
+    subgraph aio [AIO]
+    Repo3-->|HTTP|WebService;
+    Repo4-->|HTTP|WebService;
+    end
 ```
-* Repos -> notify -> Documenation Portal
-* Documentation Portal 
-   - clones repo
-   - creates updated documentation
-   - outputs documentation as HTML files into staging area 
-* Documentation Portal copies HTML files from staging area to publically accessible location  
+
+* Repos notify DocService via HTTP call
+* DocService writes to job to stable queue
+* DocService processes repo and creates HTML Documentation
 
 ## API
 API is a HTTPS request. You can write your own script or utilize a market place script like [http-request-action](https://github.com/fjogeleit/http-request-action). 
 
 ### Required Parameters
+
 
 ### Optional Parameters
 
