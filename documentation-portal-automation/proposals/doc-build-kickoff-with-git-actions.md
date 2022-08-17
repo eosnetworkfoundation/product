@@ -21,10 +21,10 @@ Documentation should be updated when there is a major update or a new release. I
 ```mermaid
 graph LR;
     subgraph sys1 [DocService]
-    WebService-->RedisJobQueue[(RedisJobQueue)];
+    WebService<-->RedisJobQueue[(RedisJobQueue)];
     WebService-->HTML;
     end
-    subgraph enf [EOS Networt Foundation]
+    subgraph enf [ENF]
     Repo1-->|HTTP|WebService;
     Repo2-->|HTTP|WebService;
     end
@@ -45,32 +45,36 @@ API is a HTTPS request. For github integration repo owners can write your own sc
 
 The url to trigger a documentation build. 
 ```
-URL: http://docservice.eosnetwork.com/update/git-owner/git-repo
+URL: http://docservice.eosnetwork.com/<action>/<git-owner>/<git-repo>/<version>
 Action: POST
 Authorization: [Basic <digest> | Bearer <token>] 
-Body: [branch: value] [tag: value]
-```
-The values in the body are optional. When no branch or tag is specified the documentation service will default to `main`. The optional body values are space seperated. `branch:` and `tag:` are literal values. An example of a body would be:
-```
-branch: release5
+Body: [branch: <value>] [tag: <value>]
 ```
 
+***Required***
+The URL must contain all elements listed above, action, git-owner, git-repo, and version.
+The Authorization header is required
 
-### Required Arguments
+**Optional**
+The body values are optional
 
-The Authorization headers are required. Either form of authorization, `Basic` or `Bearer`, may be used. 
+###Action##
+* update - signal to document service to update documents
+* cancel - cancel all jobs matching URL git-owner/git-repo/version
+* token - generate a new bearer token
+* status - list status of all jobs matching git-owner/git-repo/version
 
-### Optional Arguments
+### URL Path
+The following elements in the path are required
+* action - tell the document server what to do
+* git-owner - organization or person owning the repo
+* git-repo - name of the repo
+* version - version string that becomes a key to seperate documentation by major/minor version
 
-The only optional values are passed in the body as space seperate name/value pairs. Branch and tag are used to checkout code from git repos. 
-* No branch or tag provided
-`git checkout`
-* Branch provided no tag
-`git checkout -b <branch>`
-* Branch and tag 
-`git checkout tags/<tag> -b <branch>`
-* No Branch and tag. Puts local repo in detached HEAD state. Ok because it is read only.
-`git checkout <tag>`
+**Example of URL**
+```
+http://docservice.eosnetwork.com/update/eosnetworkfoundation/mandel-swift/3.1
+```
 
 ### Authorization
 
@@ -80,19 +84,52 @@ Authorization is done over HTTPS. The tokens and digests provided are not encryp
 
 Teams should manage their secretes appropriately. 
 
+### Body Values
+The values in the body are optional, and they are passed in the body as space seperate name/value pairs. Branch and tag are used to checkout code from git repos. 
+* No branch or tag provided
+`git checkout`
+* Branch provided no tag
+`git checkout -b <branch>`
+* Branch and tag 
+`git checkout tags/<tag> -b <branch>`
+* No Branch and tag. Puts local repo in detached HEAD state. Ok because it is read only.
+`git checkout <tag>`
+
 ### HTTP Spec and Return Codes
 
 Will be posted as documentation once the first release is ready.
 
 ## Documentation Versions 
 
+The documentation web site has a drop down allowing users to 
+
 ## Dependancies and PreConditions 
+
+* [Documentation Version Support in Docusaurus](https://github.com/eosnetworkfoundation/devdocs/issues/7)
+* AWS host with more memory (needs benchmark)
+* [Restructure Documentation Service Code](https://github.com/eosnetworkfoundation/devdocs/issues/3)
 
 ## Getting Status
 
+Status of the will be returned with the **status** action. The status is returned for all documents matching the git-owner, git-repo, and git-version. Status returns a json document with the following values
+* request URL
+* date put in job queue
+* status - running or in-queue 
+* running time - amount of time in running state
+
 ## Long Running and Duplicate Requests
 
+This applies only to **update** actions.
+
+Requests running more than 20 minutes will be canceled. This will leave the documents in an unknow state, and will require investigation by an adminsitrator.
+
+Duplicte requests are for the same git-owner, git-repo, and git-version. The first requests in will be processed, all subsequent update requests will be removed. 
+
 ## Canceling Requests
+
+Requests may be canceled by specifing the **cancel** action. All future requests matching the git-owner, git-repo, and git-version will be removed from the job queue. Any currently in progress document updates will continue untill completion, and will update the documentation web site. 
+
+Canceling in progress leads to an undefined state. 
 
 ## Deleting Documenation Versions
 Not supported, currently no way to delete a specific version. This requires a manual intervention to delete a specific version of the documenation for a given repo. 
