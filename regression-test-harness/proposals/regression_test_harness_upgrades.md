@@ -59,6 +59,28 @@ After the migration, the Python node will be responsible for the filesystem
 paths and network ports used by the `nodeos` instance it is managing.  This
 allows for automated and coordinated collision avoidance.
 
+### Improve transaction tracking
+
+Currently all high level interfaces which send transactions to `nodeos` have
+an option to wait for the transaction to appear in a block.  In order to
+streamline tests which require a group of several transactions to be verified,
+an interface will be added to wait for every id in a list of transaction ids
+to appear in a block.  This interface will optionally wait for the transactions
+to be in an irreversible block.
+
+### Dependency reduction
+
+Some tests which use the test harness invoke `curl`.  The `curl` tool is no
+longer installed by default on recent Debian derivatives.  To eliminate the
+dependency on `curl`, the test harness will make use of the Python standard
+library `urllib.request` module.
+
+### Add the Python package to a Debian package
+
+To facilitate use by others, especially eosjs, once the test harness has been
+converted to a Python package, it will be added to an appropriate Debian
+package using the `dh-python` tooling provided by the Debian project.
+
 ### Filesystem usage
 
 When a new `nodeos` instance is launched for a test, it writes a substantial
