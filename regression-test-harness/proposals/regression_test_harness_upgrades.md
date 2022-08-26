@@ -19,7 +19,7 @@ utility, and reliability of the test harness.
 
 The first major step required is to reimplement `eosio-launcher` in Python.
 The `eosio-launcher` is a non-trivial program written in C++ which accepts
-counts of nodes and their types as well as (optionally) a network topography,
+counts of nodes and their types as well as (optionally) a network topology,
 and launches all of the requested nodeos instances with the required network
 and storage configurations.  It has some additional commands for managing
 running `nodeos` instances such as `--down`, `--kill` (which is distinct from
@@ -171,4 +171,4 @@ To further improve its utility in debugging scenarios, it will:
 - Incorporate what has evolved into a substantial amount of boilerplate in
   every test into appropriate setup methods and members within the test harness
   classes.
-  
+
