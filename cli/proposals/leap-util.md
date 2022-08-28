@@ -1,25 +1,25 @@
-# Proposal for new command line tool “eosio-util”
+# Proposal for new command line tool “leap-util”
 
 Background
 ---
-Nodeos is getting cluttered with commands. These commands should be spun out into a separate utility eosio-util per:
+Nodeos is getting cluttered with commands. These commands should be spun out into a separate utility leap-util per:
 
 https://github.com/eosnetworkfoundation/mandel/issues/697
 
-More to that, we already have tools such eosio-blocklog containing all-blocklog functionality that should be integrated into one eosio-util tool for clarity and simplicity of use.
+More to that, we already have tools such eosio-blocklog containing all-blocklog functionality that should be integrated into one leap-util tool for clarity and simplicity of use.
 
 Having a single “entry point” to a maintenance tool hopefully will make it easier for users.
 
 
 Tool Proposal
 ---
-Proposed eosio-util tool should be a unified tool to manage all eosio executable services that will return to a command line upon execution. This excludes any tasks requiring spawning background processes/daemons, listening to sockets/etc.
+Proposed leap-util tool should be a unified tool to manage all eosio executable services that will return to a command line upon execution. This excludes any tasks requiring spawning background processes/daemons, listening to sockets/etc.
 Since unified tool should have ability to accept hierarchical command line arguments, it can be very similar to a very well knows Amazon “aws” command line tool, in particular:
-eosio-util [options] <command> <subcommand> [parameters]
+leap-util [options] <command> <subcommand> [parameters]
 Potential examples of using this tool can be as follows (these are for illustration purpose only, not real examples to be implemented):
 
-    eosio-util snapshot to-json -o snapshot.json
-    eosio-util blocklog vacuum –blocks-dir ./blocks
+    leap-util snapshot to-json -o snapshot.json
+    leap-util blocklog vacuum –blocks-dir ./blocks
 
     Where options are:
         -h [ --help ]                         Print this help message and exit.
@@ -40,7 +40,7 @@ Currently when invoking commands with nodeos, we need to provide a plugin name t
 
 Ideas for Usability Improvement
 ---
-There are several ideas that can make eosio-util tool more user friendly:
+There are several ideas that can make leap-util tool more user friendly:
 
 
 - Auto completion of commands / subcommands / parameters
@@ -104,7 +104,7 @@ Completion works really well in leap-util branch and can be plugged-in into othe
 https://github.com/AntelopeIO/leap/tree/leap-util
 
 
-Commands to be Migrated to eosio-util (for now)
+Commands to be Migrated to leap-util (for now)
 ---
 
 All of eosio-blocklog (and deprecating eosio-backlog tool):
@@ -150,4 +150,4 @@ Discussion topics
 2. Also for autocomplete, a config script for bash needs to be added to installation step for *.deb packages. Should we require bash-completion package as mandatory dependency for leap, or if its not installed on user system, just ignore/warn about it and autocomplete wont work
 3. Since we would be using CLI11 already in 2 places and potentially other cli utils will use it in future, it should be probably shaped into library vs one header file.
 
-###### tags: `Proposal` `eosio-util`
+###### tags: `Proposal` `leap-util`
