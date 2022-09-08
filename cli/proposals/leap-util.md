@@ -141,7 +141,7 @@ Followup on the initial review
 
     autocomplete animation:
 
-    ![](https://hackmd.io/_uploads/Hkzqnx_ej.png)
+    ![autocomplete](https://user-images.githubusercontent.com/79997103/189245576-d7bf67ff-3dc9-4c51-9829-9c8d0aed782b.gif)
 
 
 ###### tags: `Proposal` `leap-util`
