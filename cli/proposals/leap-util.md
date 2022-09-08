@@ -107,47 +107,41 @@ https://github.com/AntelopeIO/leap/tree/leap-util
 Commands to be Migrated to leap-util (for now)
 ---
 
-All of eosio-blocklog (and deprecating eosio-backlog tool):
+1. All of eosio-blocklog (and deprecating eosio-backlog tool). This will become a subcommand "blocklog"
+
+2. Snapshot manipulation functionality such as convertion to a json form
+
+3. Selected commands from nodeos and potentiually cleos later.
 
 
-    eosio-blocklog command line options:
-      --blocks-dir arg (="blocks")    the location of the blocks directory
-                                      (absolute path or relative to the current
-                                      directory)
-      -o [ --output-file ] arg        the file to write the output to (absolute or
-                                      relative path).  If not specified then output
-                                      is to stdout.
-      -f [ --first ] arg (=0)         the first block number to log or the first to
-                                      keep if trim-blocklog
-      -l [ --last ] arg (=4294967295) the last block number to log or the last to
-                                      keep if trim-blocklog
-      --no-pretty-print               Do not pretty print the output.  Useful if
-                                      piping to jq to improve performance.
-      --as-json-array                 Print out json blocks wrapped in json array
-                                      (otherwise the output is free-standing json
-                                      objects).
-      --make-index                    Create blocks.index from blocks.log. Must
-                                      give 'blocks-dir'. Give 'output-file'
-                                      relative to current directory or absolute
-                                      path (default is <blocks-dir>/blocks.index).
-      --trim-blocklog                 Trim blocks.log and blocks.index. Must give
-                                      'blocks-dir' and 'first' and/or 'last'.
-      --extract-blocks                Extract range of blocks from blocks.log and
-                                      write to output-dir.  Must give 'first'
-                                      and/or 'last'.
-      --output-dir arg                the output directory for the block log
-                                      extracted from blocks-dir
-      --smoke-test                    Quick test that blocks.log and blocks.index
-                                      are well formed and agree with each other.
-      --vacuum                        Vacuum a pruned blocks.log in to an un-pruned
-                                      blocks.log
-      -h [ --help ]                   Print this help message and exit.
-
-Discussion topics
+Discussion topics and decisions made
 ---
 
 1. In order to use bash autocomplete, a patched or forked version of CLI11 needs to be used. We need to decide what will be a right approach.
+
+    *Yes, we want to use bash autocomplete. For now, we will plan to fork a version of CLI11. Over time, there is a chance the customized aspects we're using may get merged into CLI11's main.*
+
 2. Also for autocomplete, a config script for bash needs to be added to installation step for *.deb packages. Should we require bash-completion package as mandatory dependency for leap, or if its not installed on user system, just ignore/warn about it and autocomplete wont work
+
+    *This should be an optional dependency in debian package.*
+
+
 3. Since we would be using CLI11 already in 2 places and potentially other cli utils will use it in future, it should be probably shaped into library vs one header file.
+
+    *This should just be one library used by things like cleos and leap-util*
+
+Followup on the initial review
+---
+
+1. Proposed user experiance when invoking help (and help-all) plus autocomplete. This is subject to change as we considering prettier rendering and less noisy output.
+
+    help / help-all options:
+
+    ![](https://hackmd.io/_uploads/SkQB2xugi.png)
+
+    autocomplete animation:
+
+    ![](https://hackmd.io/_uploads/Hkzqnx_ej.png)
+
 
 ###### tags: `Proposal` `leap-util`
