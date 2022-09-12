@@ -113,6 +113,22 @@ Commands to be Migrated to leap-util (for now)
 
 3. Selected commands from nodeos and potentiually cleos later.
 
+Command Line Options for eosio::chain_plugin which are good candidates to be moved into leap-util:
+
+    --print-genesis-json                extract genesis_state from blocks.log
+                                        as JSON, print to console, and exit
+
+    --extract-genesis-json arg          extract genesis_state from blocks.log
+                                        as JSON, write into specified file, and
+                                        exit
+
+    --print-build-info                  print build environment information to
+                                        console as JSON and exit
+
+    --extract-build-info arg            extract build environment information
+                                        as JSON, write into specified file, and
+                                        exit
+
 
 Discussion topics and decisions made
 ---
