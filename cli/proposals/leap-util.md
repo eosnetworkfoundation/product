@@ -153,11 +153,34 @@ Followup on the initial review
 
     help / help-all options:
 
-    ![](https://hackmd.io/_uploads/SkQB2xugi.png)
+       [valter@zen /usr/home/valter/Projects/leap/build]$ bin/leap-util --help
+        Command Line Leap Utility
+        Usage: bin/leap-util [OPTIONS] SUBCOMMANDS
 
-    autocomplete animation:
+        Options:
+        -h,--help                   Print this help message and exit
+        --help-all                  Show all help
 
-    ![autocomplete](https://user-images.githubusercontent.com/79997103/189245576-d7bf67ff-3dc9-4c51-9829-9c8d0aed782b.gif)
+
+        Subcommands:
+        version                     retrieve version information
+        blocklog                    Blocklog utility
+
+        [valter@zen /usr/home/valter/Projects/leap/build]$ bin/leap-util --help-all
+        Command Line Leap Utility
+        Usage: bin/leap-util [OPTIONS] SUBCOMMANDS
+
+        Options:
+        -h,--help                   Print this help message and exit
+        --help-all                  Show all help
+
+
+        Subcommands:
+        version                     retrieve version information
+            client                      retrieve basic version information of the client
+            full                        retrieve full version information of the client
+
+        blocklog                    Blocklog utility
 
 
 ###### tags: `Proposal` `leap-util`
