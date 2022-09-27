@@ -70,7 +70,7 @@ The plugin will have two endpoints, one for pull
 
 The pull endpoint will be re-implemented on top of nodeos http_plugin, rather than civetweb and will scrape data as defined in the prometheus_plugin configuration.
 
-The push endpoint will initiate a push to Prometheus Pushgateway as defined in the prometheus_plugin configuration. 
+The push endpoint will initiate a push to Prometheus Pushgateway as defined in the prometheus_plugin configuration.  The implementation will continue to use libcurl, as that is already a dependency for leap. 
 The value of the push endpoint would be for a nodeos instance behind a firewall to be able to send data out. 
 
 Data will be exported using the text-based exposition format.
