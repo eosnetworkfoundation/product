@@ -29,6 +29,8 @@ The pull and push functionality will not be pulled into this library. The pull f
 A new Prometheus plugin will be created.  This plugin will interface with other plugins (chain_plugin, producer_plugin, http_plugin) to supply the data to be exposed.  Instrumentation will be need to be added in the plugin to capture some of these statistics. 
 A call will be added to plugins to get their specific stats (in a non-prometheus dependent fashion).
 
+A new channel 'metrics' will be added for plugins to report the various per plugin statistics.  The prometheus_plugin will use the messages on this channel to update the statistics that it reports.
+
 Data from the original github issue (these data points will require curation/prioritization):
 
 Chain Plugin
