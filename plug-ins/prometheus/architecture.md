@@ -17,12 +17,12 @@ Unfortunately, that library is somewhat heavy weight and contains dependencies t
 * `net_zlib_zlib` for [zlib](http://www.zlib.net/)
 
 Instead of making prometheus-cpp a submodule of leap, a new library named prometheus will be created to support exporting of data points from nodeos.
-Code will be ported over from prometheus-cpp, but converted to be more in keeping with the leap coding style (snake case, .hpp & .cpp).  Substantially all of "core" will be ported 
+Code will be ported over from prometheus-cpp, but converted to be more in keeping with the leap coding style (snake case, .hpp & .cpp).  Substantially all of "core" will be ported. 
 
 Instead of relying on civetweb to implement the pull functionality, the Prometheus plugin will implement those functions on top of built-in http
 support in nodeos.  
 
-The pull and push functionality will not be pulled into this library, but will be implemented directly in the plugin, due to dependencies on other plugins. 
+The pull and push functionality will not be pulled into this library. The pull feature will be implemented directly in the plugin, due to dependencies on other plugins.  The push feature will not be implemented. 
 
 ## Plugin
 
@@ -33,7 +33,7 @@ Data from the original github issue (these data points will require curation/pri
 
 Chain Plugin
 * what is returned from /v1/chain/get_info (head block number, lib)
-* replay status (when starting from snapshot and replaying blocks)
+* sync status (when starting from snapshot and replaying blocks)
 
 Producer Plugin
 * unapplied transaction queue sizes
@@ -66,9 +66,7 @@ All API plugins
 Unknown
 * number of bytes per block by producer
 
-The plugin will have two endpoints, one for pull 
-
-The pull endpoint will be re-implemented on top of nodeos http_plugin, rather than civetweb and will scrape data as defined in the prometheus_plugin configuration.
+The plugin will have one endpoint for to support the pull functionality. The pull endpoint will be implemented on top of nodeos http_plugin, rather than civetweb and will scrape data as defined in the prometheus_plugin configuration.
 
 The push endpoint will initiate a push to Prometheus Pushgateway as defined in the prometheus_plugin configuration.  The implementation will continue to use libcurl, as that is already a dependency for leap. 
 The value of the push endpoint would be for a nodeos instance behind a firewall to be able to send data out. 
