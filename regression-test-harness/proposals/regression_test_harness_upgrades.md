@@ -115,12 +115,12 @@ in a cluster and across clusters to avoid collisions.
 
 The current test harness hardcodes an initial listen port of 8888 on 127.0.0.1
 and uses each port in sequence per node in the cluster for the http plugin.
-The revised system will take advantage of the entirety of the 127.0.0.0/8
-subnet by choosing an IP address to run the cluster on deterministically based
-on the name of the test as it is known to `ctest`.  The listen port for the
-http plugin will remain the default 8888 and sequential ports, though at least
-one test will start on an alternate port to ensure customized ports work
-throughout the system.
+The revised system will use Linux namespaces to isolate each test's network
+activity in its own sandbox. The listen port for the http plugin will remain
+the default 8888 and sequential ports, though at least one test will start
+on an alternate port to ensure customized ports work throughout the system.
+If the '--keep-running' flag is specified, virtual network devices will be
+created to allow interaction with the test network from outside the sandbox.
 
 As with filesystem usage, the IP address and ports used will be customizable.
 The test harness currently exposes the port number for the HTTP plugin for
