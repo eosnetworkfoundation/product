@@ -25,7 +25,7 @@ We are going to implement from scratch map container and hash functions so need 
 
 ## Functionality
 
-```
+```c++
 using my_map_t = eosio::kv::unordered_map<"kvmap"_n, int, std::string>;
 
 my_map_t kvmap;
