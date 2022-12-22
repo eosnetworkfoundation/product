@@ -1,7 +1,7 @@
 # Prometheus Plugin Architecture
 
 This document describes the architecture for the Prometheus Plugin (eosio::prometheus_plugin).  The Prometheus Plugin instruments nodes in order to allow
-data to be collected from [Prometheus](https://prometheus.io/).  The requirements for this plugin are described in this github issue:
+data to be collected from [Prometheus](https://prometheus.io/).  The requirements for this plugin are extracted from this [Github issue](https://github.com/eosnetworkfoundation/mandel/issues/67):
 
 > For monitoring, nodeos should have a prometheus exporter plugin (that runs on a separate port), which exposes key metrics that would be useful for monitoring.
 >
@@ -75,8 +75,8 @@ Producer plugin metrics will be gathered at the start of each block.
 * counter - transactions produced
 * gauge - last irreversible
 * gauge - current block num
-* gauge - subjective billing account size
-* gauge - subjective billing block size
+* gauge - subjective billing number of accounts
+* gauge - subjective billing number of blocks
 * gauge - scheduled transactions
  
 ## Chain Plugin
