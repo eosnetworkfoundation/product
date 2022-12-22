@@ -79,10 +79,6 @@ Producer plugin metrics will be gathered at the start of each block.
 * gauge - subjective billing number of blocks
 * gauge - scheduled transactions
  
-## Chain Plugin
-* counter - snapshot rows processed
-* counter - replay block status 
-
 ## Subsequent Instrumentation
 After the initial evaluation the following metrics will be added:
 
