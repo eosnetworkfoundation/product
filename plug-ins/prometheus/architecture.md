@@ -69,8 +69,8 @@ An initial phase of instrumentation will allow for the evaluation of the usabili
 
 Producer plugin metrics will be gathered at the start of each block.
 
-* gauge - unapplied transaction queue sizes
-* counter - blacklisted transactions count
+* gauge - unapplied transaction queue sizes (number of transactions)
+* counter - blacklisted transactions count (total)
 * counter - blocks produced
 * counter - transactions produced
 * gauge - last irreversible
@@ -97,7 +97,8 @@ After the initial evaluation the following metrics will be added:
 * gauge - cpu usage by thread
 * gauge - disk space in bytes used by volume (blocks, ship, state, trace)
 * gauge - disk space in bytes available
-
+* gauge - number of dropped blocks
+ 
 ## Prometheus Endpoint
 The prometheus_plugin will have one endpoint (/metrics) to support the pull functionality. The pull endpoint will be implemented on top of nodeos http_plugin, rather than civetweb.
 Data will be exported using the text-based exposition format.
