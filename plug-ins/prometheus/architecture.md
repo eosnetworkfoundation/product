@@ -50,7 +50,7 @@ The prometheus-cpp library will be brought in as a submodule of leap, but the Pr
 
 ## Plugin
 
-A new Prometheus plugin will be created.  This plugin will interface with other plugins (chain_plugin, producer_plugin, http_plugin) to supply the data to be exposed.  Instrumentation will be need to be added in the plugin to capture some of these statistics. 
+A new Prometheus plugin will be created.  This plugin will interface with other plugins (chain_plugin, producer_plugin, http_plugin, net_plugin) to supply the data to be exposed.  Instrumentation will be need to be added in the plugin to capture some of these statistics. 
 A metrics() call will be added to plugins to get their specific stats (in a non-prometheus dependent fashion).
 
 ## Instrumentation of plugins
@@ -59,6 +59,7 @@ Each of the various plugins will be instrumented to collect various runtime metr
 The plugin_metrics will contain a set of member runtime_metrics which consist of a type {gauge or counter}, a name and a label.  In addition to the member metrics, a vector of metrics will be maintained for the use of the prometheus plugin. None of the non-prometheus plugins will have any dependency on the prometheus-cpp library. 
 Synchronization will be managed through the use of std::atomic.  This will ensure that all metric values are in a coherent state.  It does not ensure that all of the metric values represent a coherent 'snapshot' of a point (eg. it is possible that not all producer plugin values represent the state at a specific block).
 
+## Initial Intrumentation
 An initial phase of instrumentation will allow for the evaluation of the usability of the instrumentation when viewed from Prometheus.  The initial instrumentation will not include any per account or per contract metrics.  Additionally, the ability to expire metrics will not be included in the initial phase. To support dynamic metrics, the metric object for each plugin will include an indicator of when the set of metrics has last changed.  The following metrics will be collected for the initial phase of instrumentation:
 
 ## Net Plugin
