@@ -106,9 +106,9 @@ Configurable options read-write window time, and read-only window time, number o
 - At the end of read-write window and if read-only transaction queue has entries, or the number of outstanding read-only transactions reaches the threshold, switch to read-only window. This ensures both low and high number of read-only transaction cases are handled.
 - At the end of read-only window or read-only queue becomes empty, switch to read-write window. The threshold option helps to make sure not too many read-only transactions are held if last read-only window exits before its end time.
 
-### How to Handle Write Requests in `read-only` Window?
-During read-only window, new write requests keep coming in. How to handle them?
-- Drop write requests. This in not acceptable as it changes the behavior of the API node.
+### How to Handle Write and sync Requests in `read-only` Window?
+During read-only window, new write and sync requests keep coming in. How to handle them?
+- Drop the requests. This in not acceptable as it changes the behavior of the API node.
 - Queue the requests.  This is complex, considering different types of requests, how and where to re-process them.
 - Repost to the main thread. All write requests are handled by the main thread for some period of time. In the functor of the post to the main thread, if node is in `read-only` window, re-post it to the main thread. Care must be taken to prevent infinite loops. Should the order of write requests be kept?
 
@@ -130,7 +130,7 @@ flowchart TD
     C --> D{is queue empty or time to switch?}
     D -->|yes| E[exits the processing task]
     D -->|no| C
-    B --> F{{"main thread: process RPC read and Net non-sync requests; repost write and sync requests"}}
+    A --> F{{"main thread: process RPC read and Net non-sync requests; repost write and sync requests"}}
     F --> G{all read-only thread tasks done?}
     G -->|yes| H[exit read-only window]
     G -->|no| F
