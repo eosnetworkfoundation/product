@@ -6,135 +6,125 @@ Continuing PR (https://github.com/AntelopeIO/leap/pull/558) (on branch https://g
 
 ### HTTP RPC Requests
 
-RPC requests can be classified into synchronous reads and asynchronous read-writes.
-- Synchronous reads are those whose names start with `get_`, like `get_info`, `get_block`, .... They do not modify states, and are executed immediately.
-- Asynchronous read-writes are the rest, like `compute_transaction`, `send_transaction`, and `send_transaction2`.  They may modify states and are executed asynchronously via producer thread scheduling.
+#### Chain APIs
+Chain APIs can be classified into reads and writes.
+- Reads are those whose names start with `get_`, like `get_info`, `get_activated_protocol_features`, `get_block`, `get_block_info` ... They do not modify states.
+- Writes are the rest of requests: `compute_transaction`, `push_transaction`, `push_transactions`, `send_transaction`, `send_transaction2`, and `push_block`.  They may modify states.
 
-The diagram below depicts `get_info` and `send_transaction2` handling.
+Chain APIs are received on the HTTP thread, processed on the main thread (and producer thread for non-get requests), and responses are sent on the HTTP thread.
 
-```mermaid
-flowchart TD
-    A>RPC requests] --> B["http thread -- beast_http_session::on_read() receives requests"]
-    B --> C["http thread -- beast_http_session::handle_request()"]
-    C --> D["http thread -- http_plugin::make_app_thread_url_handler() posts to main thread"]
-    D -->|get_info| E1["main thread -- chain_apis::get_info(); url_response_callback()"]
-    D -->|send_transaction2| E2["main thread -- chain_apis::send_transaction2() "]
-    E1 --> F["main thread -- make_http_response_handle()r posts response to http thread"]
-    F --> G["http thread -- beast_http_session::send_response()"]
-    E2 --> H["main thread -- incoming::methods::transaction_async>()"]
-    H --> I["main thread -- producer_puging::on_incoming_transaction()" post to producer thread]
-    I --> K["producer thread -- post to main thread"]
-    K --> L["main thread -- producer_puging::push_transaction() executes transaction"]
-    L --> F
-```
+| API                             |  Data modified                | read-only thread safe  |
+|---------------------------------|-------------------------------|------------------------|
+| get_info                        |  none                         | yes                    |
+| get_activated_protocol_features |  none                         | yes                    |
+| get_block                       |  none                         | yes                    |
+| get_block_info                  |  none                         | yes                    |
+| get_block_header_state          |  none                         | yes                    |
+| get_account                     |  none                         | yes                    |
+| get_code                        |  none                         | yes                    |
+| get_code_hash                   |  none                         | yes                    |
+| get_abi                         |  none                         | yes                    |
+| get_raw_code_and_abi            |  none                         | yes                    |
+| get_raw_abi                     |  none                         | yes                    |
+| get_table_rows                  |  none                         | yes                    |
+| get_table_by_scope              |  none                         | yes                    |
+| get_currency_balance            |  none                         | yes                    |
+| get_currency_stats              |  none                         | yes                    |
+| get_producers                   |  none                         | yes                    |
+| get_producer_schedule           |  none                         | yes                    |
+| get_scheduled_transactions      |  none                         | yes                    |
+| abi_json_to_bin                 |  none                         | yes                    |
+| abi_bin_to_json                 |  none                         | yes                    |
+| get_required_keys               |  none                         | yes                    |
+| get_transaction_id              |  none                         | yes                    |
+| get_consensus_parameters        |  none                         | yes                    |
+| get_accounts_by_authorizers     |  none                         | yes                    |
+| get_transaction_status          |  none                         | yes                    |
+| send_read_only_transaction      |  none                         | yes                    |
+| compute_transaction             |  main thread: temp change chainbase      | no          |
+| push_block                      |  main thread: chainbase, forkdb, producer, controller | no |
+| push_transaction                |  main thread: chainbase, forkdb, producer, controller | no |
+| push_transactions               |  main thread: chainbase, forkdb, producer, controller | no |
+| send_transaction                |  main thread: chainbase, forkdb, producer, controller | no |
+| send_transaction2               |  main thread: chainbase, forkdb, producer, controller | no |
 
-Net requests can be classified into sync and non-sync:
-- Non-sync requests are handshake_message, go_away_message, notice_message, time_message, request_message, sync_request_message. They do not modify states.
-- Sync requests are signed_block, packed_transaction. They may modify states.
 
-#### handshake_message
-```mermaid
-flowchart TD
-    A>handshake_message] --> B["net thread -- msg_handler"]
-    B --> C["net thread -- connection::handle_message(handshake_message) posts to main thread"]
-    C --> D["main thread -- handshake check"]
-```
+#### Producer APIs
+Producer APIs do not mutate states. They are received on the HTTP thread, processed on the main thread, and responses are sent on the HTTP thread.
 
-#### go_away_message
-```mermaid
-flowchart TD
-    A>go_away_message] --> B["net thread -- msg_handler"]
-    B --> C["net thread -- connection::handle_message(go_away_message) closes connection"]
-```
-#### time_message
-```mermaid
-flowchart TD
-    A>time_message] --> B["net thread -- msg_handler"]
-    B --> C["net thread -- connection::handle_message(time_message) sends time"]
-```
-#### notice_message
-```mermaid
-flowchart TD
-    A>notice_message] --> B["net thread -- msg_handler"]
-    B --> C["net thread -- connection::handle_message(notice_message) requests next chunk"]
-```
-#### request_message
-```mermaid
-flowchart TD
-    A>request_message] --> B["net thread -- msg_handler"]
-    B --> C["net thread -- connection::handle_message(request_message)"]
-    C --> D["net thread -- connection::blk_send() or connection::blk_send_branch()" post to main thread]
-    D --> E["main thread -- controller::fetch_block_by_id()"]
-    E -->  F["net thread -- sends block"]
-```
+| API                         |  Data modified                | read-only thread safe  |
+|-----------------------------|-------------------------------|------------------------|
+| pause                       |  main thread: producer's \_pause_production  | yes     |
+| resume                      |  main thread: producer's \_pause_production  | yes     |
+| paused                      |                               | yes                    |
+| get_runtime_options         |                               | yes                    |
+| update_runtime_options      |  main thread: producer plugin and controller configs | no (configs used by trx processing|
+| add_greylist_accounts       |  main thread: controller resource_greylist | yes (not used in read-only trx handling. only used by max_bandwidth_billed_accounts_can_pay) |
+| remove_greylist_accounts    |  main thread: controller resource_greylist | yes       |
+| get_greylist                |                               | yes                    |
+| get_whitelist_blacklist     |                               | yes                    |
+| set_whitelist_blacklist     |  main thread:controller blacklist, whitelist|  no      |
+| get_integrity_hash          |                               | yes                    |
+| create_snapshot             |                               | yes                    |
+| get_scheduled_protocol_feature_activations |                | yes                    |
+| schedule_protocol_feature_activations |                     | no                     |
+| get_supported_protocol_features |                           | yes                    |
+| get_account_ram_corrections |                               | yes                    |
+| get_unapplied_transactions  |                               | yes                    |
 
-#### sync_request_message
-```mermaid
-flowchart TD
-    A>sync_request_message] --> B["net thread -- msg_handler"]
-    B --> C["net thread -- connection::handle_message(sync_request_message)"]
-    C --> D["net thread -- connection::enqueue_sync_block()" post to main thread]
-    D --> E["main thread -- controller::cc.fetch_block_by_number()"]
-    E -->  F["net thread -- sends block"]
-```
+#### Net APIs
+Net APIs do not mutate states. They are received on the HTTP thread, processed on the main thread, and responses are sent on the HTTP thread.
 
-#### packed_transaction_ptr
-```mermaid
-flowchart TD
-    A>packed_transaction_ptr] --> B["net thread -- msg_handler"]
-    B --> C["net thread -- connection::handle_message(packed_transaction_ptr)"]
-    C --> D["net thread -- chain_plug::accept_transaction()"]
-    D --> D1["net thread -- chain_plug::incoming_transaction_async_method()"]
-    D1 --> E["net thread -- incoming::methods::transaction_async>()"]
-    E --> F["net thread -- producer_puging::on_incoming_transaction()" post to producer thread]
-    F --> G["producer thread -- post to main thread"]
-    G --> H["main thread -- producer_puging::push_transaction() executes transaction"]
-```
-#### signed_block_ptr
-```mermaid
-flowchart TD
-    A>signed_block_ptr] --> B["net thread -- msg_handler"]
-    B --> C["net thread -- connection::handle_message(signed_block_ptr)" post to main thread]
-    C --> D["main thread -- connection::process_signed_block()"]
-```
+| API                         |  Data modified                  | read-only thread safe  |
+|-----------------------------|---------------------------------|------------------------|
+| connect                     |  main thread: net::connections  | yes                    |
+| disconnect                  |  main thread: net::connections  | yes                    |
+| status                      |  none                           | yes                    |
+| connections                 |  none                           | yes                    |
+
+
+#### Trace APIs
+ API                          |  Data modified                  | read-only thread safe  |
+|-----------------------------|---------------------------------|------------------------|
+| get_block                   |  none                           | yes                    |
+| get_transaction_trace       |  none                           | yes                    |
+
+#### DB Size API
+| API                         |  Data modified                  | read-only thread safe  |
+|-----------------------------|---------------------------------|------------------------|
+| get                         |  none  | yes                    |                        |
+
+### Net Messages
+
+Net messages can be classified into sync and non-sync:
+- Non-sync messages do not modify states.
+- Sync messages are signed_block, packed_transaction. They may modify states.
+
+| Message                     | Data modified                   | threads involved | read-only thread safe |
+|-----------------------------|---------------------------------|-----------------------------|-----------------------| 
+| handshake                   | none                            | net, main (handshake check) | yes        |
+| go_away                     | none                            | net              | yes                   |
+| time                        | none                            | net              | yes                   |
+| notice                      | none                            | net              | yes                   |
+| request                     | none                            | net, main (controller::fetch_block_by_id()) | yes   |
+| sync_request                | none                            | net, main (controller::fetch_block_by_number()) | yes |
+| packed_transaction          | chainbase, forkdb, producer, net, controller | net, producer, main | no    |
+| signed_block                | chainbase, forkdb, producer, net, controller | net, producer, main | no    |
 
 ## Design Decisions
-The API node toggles between `read-write` and `read-only` windows. In `read-write` window, the node handles requests normally, except queuing read-only transactions . In `read-only` window, the node runs read-only transactions in the read-only thread pool, and handles `get_` types of RPC requests and non-sync Net requests as they come in while hold on processing RPC write and Net sync requests.
+The node toggles between `write` and `read` windows. In `write` window, the node handles requests normally, except queuing read-only transactions . In `read` window, the node runs read-only transactions in the read-only thread pool, and runs read-only thread safe requests in other threads.
 
 ### When to Switch Windows?
-Configurable options read-write window time, and read-only window time, number of read-only transaction threshold are provided. 
-- At the end of read-write window and if read-only transaction queue has entries, or the number of outstanding read-only transactions reaches the threshold, switch to read-only window. This ensures both low and high number of read-only transaction cases are handled.
-- At the end of read-only window or read-only queue becomes empty, switch to read-write window. The threshold option helps to make sure not too many read-only transactions are held if last read-only window exits before its end time.
+To facilitate window switching, configurable options write window time, and read window time, and number of read-only transaction threshold are provided. 
+- From `write` to `read`: Switch at the end of the `write` window and read-only transaction queue has entries, or whenever the number of outstanding read-only transactions reaches the threshold.
+- From `read` to `write`: Switch at the end of read-only window or whenever read-only queue becomes empty. The threshold option helps to make sure not too many read-only transactions are held if last read-only window exits before its end time.
 
 ### How to Handle Write and sync Requests in `read-only` Window?
-During read-only window, new write and sync requests keep coming in. How to handle them?
-- Drop the requests. This in not acceptable as it changes the behavior of the API node.
-- Queue the requests.  This is complex, considering different types of requests, how and where to re-process them.
+During `read` window, new read-only thread non-safe requests keep coming in. How to handle them?
+- Drop the requests. This in not acceptable as it changes the behavior of the node.
+- Queue the requests. Modify appbase priority queue by adding a request type `thread-safe` and `not-thread-safe`. In `write` window, everything works as it is now. In `read` window, only `thread-safe` requests are dequeued and processed. This avoids introducing new queues and keeps the order of the request.
 - Repost to the main thread. All write requests are handled by the main thread for some period of time. In the functor of the post to the main thread, if node is in `read-only` window, re-post it to the main thread. Care must be taken to prevent infinite loops. Should the order of write requests be kept?
 
-## Call Flow
-
-### Read-write Window
-```mermaid
-flowchart TD
-    A(((read-write window))) --> B{read-only transaction?}
-    B  -->|yes| C1[queue the transaction]
-    B  -->|no| C2[normal handling]
-```
-
-### Read-only Window
-```mermaid
-flowchart TD
-    A(((read-only window))) --> B[main thread: post to read-only thread]
-    B --> C{{read-only-thread: process read-only transaction}}
-    C --> D{is queue empty or time to switch?}
-    D -->|yes| E[exits the processing task]
-    D -->|no| C
-    A --> F{{"main thread: process RPC read and Net non-sync requests; repost write and sync requests"}}
-    F --> G{all read-only thread tasks done?}
-    G -->|yes| H[exit read-only window]
-    G -->|no| F
-```
 
 ### Read-only Transaction Queue
 ```c++
