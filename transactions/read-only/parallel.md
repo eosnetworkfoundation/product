@@ -206,10 +206,10 @@ std::priority_queue<read_only_trx, std::deque<read_only_trx>, read_only_trx_less
 - number of read-only threads is 0
 - number of read-only threads is 1
 - number of read-only transactions greater than number of threads
-- `read-write-window-time` test
-- `read-only-transaction-window-time` test
-- `read-only-transaction-threshold` test
-- `read-only-window-margin` test
+- `write-window-time` test
+- `read-window-time` test
+- `read-only-max-queued-time` test
+- `read-window-min-time` test
 - read-only transactions are processed within one read window
 - read-only transactions are processed in multiple read windows
 - initiate RPC requests while read-only transactions are executed
