@@ -1,8 +1,6 @@
 # Snapshot Scheduling API Design specs
 
-:::info
 :bulb: Following document embodies API proposal in relation to the following github issue https://github.com/AntelopeIO/leap/issues/396.
-:::
 
 ## :beginner: Design Info
 
@@ -50,10 +48,7 @@ As an additional consideration when scheduling a snapshot should be it's alignme
 
 Please note that single snapshot request can trigger and correspond to multiple pending snapshots due to waiting for irreversibility or in the case where snapshots happenning on different forks
 
-:::info
-:bulb:
-Implementation note - It would be great to encapsulate this logic into a separate class, so we can tweak/alter it without touching other code
-:::
+:bulb: Implementation note - It would be great to encapsulate this logic into a separate class, so we can tweak/alter it without touching other code
 
 ![image](https://user-images.githubusercontent.com/79997103/212993658-af39ac43-ee64-4578-8d8f-4cbe16dba1da.png)
 
@@ -74,9 +69,8 @@ Request takes snapshot_id as parameter and returns either successful confirmatio
 
 ## :feet: Implementation
 
-:::info
 :bulb: Following section on a high level addresses proposed implementation of snapshot scheduling API
-:::
+
 Implementation of API URL handlers and execution of the snapshot itself will be similar to a number of existing API endpoints and wont be described here
 
 However, it is important to drill down into implementation of a "snapshot scheduling engine" that will encapsulate all business logic needed for API functionality
@@ -151,9 +145,7 @@ Snapshot scheduling engine should be able to read this database file on startup,
 
 
 ## :blush: Example of Use / Demo
-:::info
 :bulb: Following examples may need to be revised once API calls would be actually implemented
-:::
 
 #### Snapshot "now", one time, asap
 ```shell
@@ -315,9 +307,8 @@ will return:
 
 
 ## :boom: Swagger API definition
-:::info
+
 :bulb: This can be found in snapshot-api branch, file: plugins/producer_api_plugin/producer.swagger.yaml
-:::
 
 ```yaml
 /producer/schedule_snapshot:
