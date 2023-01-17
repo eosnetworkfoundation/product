@@ -2,18 +2,20 @@
 
 Continuing PR (https://github.com/AntelopeIO/leap/pull/558) (on branch https://github.com/AntelopeIO/leap/tree/send_read_only_trx), this document describes an approach to parallelize read-only transaction execution.
 
-## Existing Requests Handling
+## Main Ideas
+The node toggles between `write` and `read` windows. In `write` window, the node operates normally, except queuing read-only transactions for later parallel execution. In `read` window, the node runs queued read-only transactions in a dedicated thread pool, while in parallel in the main and other threads runs operations which are safe to read-only transaction execution.
 
-### HTTP RPC Requests
+## Existing Operation Analysis
+This section analyzes thread safety of existing operations. 
 
-#### Chain APIs
+### Chain APIs
 Chain APIs can be classified into reads and writes.
-- Reads are those whose names start with `get_`, like `get_info`, `get_activated_protocol_features`, `get_block`, `get_block_info` ... They do not modify states.
+- Reads are those whose names start with `get_`, like `get_info`, `get_activated_protocol_features`, `get_block`, `get_block_info`. They do not modify states.
 - Writes are the rest of requests: `compute_transaction`, `push_transaction`, `push_transactions`, `send_transaction`, `send_transaction2`, and `push_block`.  They may modify states.
 
 Chain APIs are received on the HTTP thread, processed on the main thread (and producer thread for non-get requests), and responses are sent on the HTTP thread.
 
-| API                             |  Data modified                | read-only thread safe  |
+| API                             |  Global data modified         | Safe to read-only trx? |
 |---------------------------------|-------------------------------|------------------------|
 | get_info                        |  none                         | yes                    |
 | get_activated_protocol_features |  none                         | yes                    |
@@ -41,7 +43,7 @@ Chain APIs are received on the HTTP thread, processed on the main thread (and pr
 | get_accounts_by_authorizers     |  none                         | yes                    |
 | get_transaction_status          |  none                         | yes                    |
 | send_read_only_transaction      |  none                         | yes                    |
-| compute_transaction             |  main thread: temp change chainbase      | no          |
+| compute_transaction             |  main thread: temporally change chainbase      | no        |
 | push_block                      |  main thread: chainbase, forkdb, producer, controller | no |
 | push_transaction                |  main thread: chainbase, forkdb, producer, controller | no |
 | push_transactions               |  main thread: chainbase, forkdb, producer, controller | no |
@@ -49,10 +51,10 @@ Chain APIs are received on the HTTP thread, processed on the main thread (and pr
 | send_transaction2               |  main thread: chainbase, forkdb, producer, controller | no |
 
 
-#### Producer APIs
-Producer APIs do not mutate states. They are received on the HTTP thread, processed on the main thread, and responses are sent on the HTTP thread.
+### Producer APIs
+They are received on the HTTP thread, processed on the main thread, and responses are sent on the HTTP thread.
 
-| API                         |  Data modified                | read-only thread safe  |
+| API                         |  Global data modified         | Safe to read-only trx? |
 |-----------------------------|-------------------------------|------------------------|
 | pause                       |  main thread: producer's \_pause_production  | yes     |
 | resume                      |  main thread: producer's \_pause_production  | yes     |
@@ -72,10 +74,10 @@ Producer APIs do not mutate states. They are received on the HTTP thread, proces
 | get_account_ram_corrections |                               | yes                    |
 | get_unapplied_transactions  |                               | yes                    |
 
-#### Net APIs
+### Net APIs
 Net APIs do not mutate states. They are received on the HTTP thread, processed on the main thread, and responses are sent on the HTTP thread.
 
-| API                         |  Data modified                  | read-only thread safe  |
+| API                         |  Global data modified           | Safe to read-only trx? |
 |-----------------------------|---------------------------------|------------------------|
 | connect                     |  main thread: net::connections  | yes                    |
 | disconnect                  |  main thread: net::connections  | yes                    |
@@ -83,24 +85,23 @@ Net APIs do not mutate states. They are received on the HTTP thread, processed o
 | connections                 |  none                           | yes                    |
 
 
-#### Trace APIs
- API                          |  Data modified                  | read-only thread safe  |
+### Trace APIs
+| API                         |  Global data modified           | Safe to read-only trx? |
 |-----------------------------|---------------------------------|------------------------|
 | get_block                   |  none                           | yes                    |
 | get_transaction_trace       |  none                           | yes                    |
 
-#### DB Size API
-| API                         |  Data modified                  | read-only thread safe  |
+### DB Size API
+| API                         |  Global data modified           | read-only thread safe  |
 |-----------------------------|---------------------------------|------------------------|
 | get                         |  none  | yes                    |                        |
 
 ### Net Messages
-
 Net messages can be classified into sync and non-sync:
 - Non-sync messages do not modify states.
 - Sync messages are signed_block, packed_transaction. They may modify states.
 
-| Message                     | Data modified                   | threads involved | read-only thread safe |
+| Message                     | Global data modified            | threads involved            | Safe to read-only trx?|
 |-----------------------------|---------------------------------|-----------------------------|-----------------------| 
 | handshake                   | none                            | net, main (handshake check) | yes        |
 | go_away                     | none                            | net              | yes                   |
@@ -111,31 +112,73 @@ Net messages can be classified into sync and non-sync:
 | packed_transaction          | chainbase, forkdb, producer, net, controller | net, producer, main | no    |
 | signed_block                | chainbase, forkdb, producer, net, controller | net, producer, main | no    |
 
+### SHiP
+SHiP receives blockchain state data, saves it to files, and sends data to nodes who request it.
+
+| Request               |  Data modified                  | Safe to read-only trx? |
+|-----------------------|---------------------------------|------------------------|
+| get_status            |  internal                       | yes                    |
+| get_blocks            |  internal                       | yes                    |
+| get_blocks_ack        |  internal                       | yes                    |
+
 ## Design Decisions
-The node toggles between `write` and `read` windows. In `write` window, the node handles requests normally, except queuing read-only transactions . In `read` window, the node runs read-only transactions in the read-only thread pool, and runs read-only thread safe requests in other threads.
 
-### When to Switch Windows?
-To facilitate window switching, configurable options write window time, and read window time, and number of read-only transaction threshold are provided. 
-- From `write` to `read`: Switch at the end of the `write` window and read-only transaction queue has entries, or whenever the number of outstanding read-only transactions reaches the threshold.
-- From `read` to `write`: Switch at the end of read-only window or whenever read-only queue becomes empty. The threshold option helps to make sure not too many read-only transactions are held if last read-only window exits before its end time.
+### Window Toggling
+To support toggling between `read` and `write` windows, configurable options `read-window-time`, `write-window-time`, and `read-only-max-queued-time` are provided. 
+- From `write` to `read`: When a new read-only transaction is queued, if the time the earliest transaction has been queued exceeds `read-only-max-queued-time`; or at the end of the `write` window and read-only transaction queue not empty.
+- From `read` to `write`: when read-only transaction queue is emptied by the read-only threads; or at the end of `read` window.
 
-### How to Handle Write and sync Requests in `read-only` Window?
-During `read` window, new read-only thread non-safe requests keep coming in. How to handle them?
-- Drop the requests. This in not acceptable as it changes the behavior of the node.
-- Queue the requests. Modify appbase priority queue by adding a request type `thread-safe` and `not-thread-safe`. In `write` window, everything works as it is now. In `read` window, only `thread-safe` requests are dequeued and processed. This avoids introducing new queues and keeps the order of the request.
-- Repost to the main thread. All write requests are handled by the main thread for some period of time. In the functor of the post to the main thread, if node is in `read-only` window, re-post it to the main thread. Care must be taken to prevent infinite loops. Should the order of write requests be kept?
+In the following state diagram, `longest_queued_time = now - the time when the oldest trx was queued`, `write_window_deadline = time when write window starts + write-window-time`, and `read_window_deadline = time when read window starts + read-window-time`
 
+```mermaid
+flowchart TD
+    A(((write window))) -->|push a new trx| B[longest_queued_time < read-only-max-queued-time?]
+    B -->|yes| R(((read window)))
+    B -->|no| A
+    A --> D[write_window_deadline passed?]
+    D -->|yes| F[read-only trx queue empty?]
+    D -->|no| A
+    F -->|yes| A
+    F -->|no| R
+    
+    R --> S[read-only trx queue empty?]
+    S -->|yes| A
+    S -->|no| R
+    R --> T[read_window_deadline passed?]
+    T -->|yes| A
+    T -->|no| R  
+```
 
-### Read-only Transaction Queue
+### Handling main thread functions that are not safe to read-only transaction execution in `read` Window
+Several options are considered to handle 
+- Drop the functions. This in not acceptable as it changes the behavior.
+- Re-post to the main thread. In `read` window, re-post a not-read-only-safe function back to the main thread. This is simple to implement but breaks the order of functions and waste time in popping and pushing. 
+- Modify appbase `execution_priority_queue` by adding a function type with value `read-only-safe` or `not-read-only-safe`. In `write` window, everything works as it is now. In `read` window, only `thread-safe` requests are dequeued and processed. This avoids introducing new queues and keeps the order of the request. But as the queue is a priority queue based on function priority, it is infeasible to incorporate the additional type into the priority in a single queue.
+- Separate appbase queue into two queues: `read-only-safe` or `not-read-only-safe`. The function type is added when a function is posted. 
+  - In `read` window, only functions in `read-only-safe` queue are executed.
+  - In `write` window, compare the priorities of the top functions in `read-only-safe` and `not-read-only-safe`. The one with higher priority is executed. If tied, three options are considered:
+    - `not-read-only-safe` function is favored 
+    - randomly pick one
+    - add a time attribute to the functions and earlier one is picked.
+
+### Read-only Transaction Priority Queue
+The queue is used to store read-only transactions during `write` window. To maintain the time order when a transaction is put back into the queue for the next round due to `red` window deadline, a priority queue based on the first time when a transaction is queued is used.
 ```c++
-struct read_only_transaction {
-   send_read_only_transaction_params params;
-   next_func_t  next;
+struct read_only_trx {
+   fc::time_point          initial_queued_time;
+   packed_transaction_ptr  trx;
+   next_func_t             next;
+};
+      
+struct read_only_trx_less {
+   bool operator() (const read_only_trx& a, const read_only_trx& b) {
+      // earlier queued time has higher priority
+      return a.initial_queued_time > b.initial_queued_time;
+   }
 };
 
-std::queue <read_only_transaction> read_only_trx_queue;
+std::priority_queue<read_only_trx, std::deque<read_only_trx>, read_only_trx_less>  read_only_trx_queue;     
 ```
-Protected by a mutex. A transaction failed due to read window deadline but not transaction deadline will be put back into the queue for next round.
 
 ### Configuration Options
 
@@ -152,7 +195,7 @@ Protected by a mutex. A transaction failed due to read window deadline but not t
 - Safety between read-only transaction threads and other `nodeos` threads
    - _main_ thread: The `main` thread only performs read-only requests. It does not have any conflicts with read-only threads.
    - _chain_ thread: `chain` threads are used in `apply_block`, `log_irreversible`, `finalize_block`,  `create_block_state_future`. Those do not run while in read-only window.
-   - _net_ thread: Non-read requests are reposted to (held by) the main thread. No conflicts with read-only transaction execution.
+   - _net_ thread: Non-read requests are reposted to the main thread. No conflicts with read-only transaction execution.
    - _http_ thread: It is used to receive requests and send back responses. No conflicts with read-only transaction execution.
    - _prod_ thread: It is used in on_incoming_transaction_async, which is not running in read-only window
    - _resource monitor_ thread: Resource monitor does not have any conflicts with any transaction execution.
@@ -169,4 +212,4 @@ Protected by a mutex. A transaction failed due to read window deadline but not t
 - `read-only-window-margin` test
 - read-only transactions are processed within one read window
 - read-only transactions are processed in multiple read windows
-- make other RPC requests while read-only transactions are executed
+- initiate RPC requests while read-only transactions are executed
