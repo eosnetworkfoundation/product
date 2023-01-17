@@ -55,22 +55,22 @@ Please note that single snapshot request can trigger and correspond to multiple 
 Implementation note - It would be great to encapsulate this logic into a separate class, so we can tweak/alter it without touching other code
 :::
 
-![](https://hackmd.io/_uploads/ByB9WONjs.png)
+![image](https://user-images.githubusercontent.com/79997103/212993658-af39ac43-ee64-4578-8d8f-4cbe16dba1da.png)
 
 ### Retrieving Snapshot Requests
 This endpoint will return all scheduled snapshot requests with pagination - starting from snapshot determined by 'start_snapshot_request_id' (optional) and returning 'limit' number of snapshots
 
-![](https://hackmd.io/_uploads/SynRbOEii.png)
+![image](https://user-images.githubusercontent.com/79997103/212993725-debd027e-05d0-490b-bbe4-ee95e5d1820e.png)
 
 ### Retrieving Snapshot Status
 Request takes snapshot_id as parameter and either returns object describing scheduled snapshot or an error
 
-![](https://hackmd.io/_uploads/BJm-MuEij.png)
+![image](https://user-images.githubusercontent.com/79997103/212993777-69c841d7-01a3-4565-b925-696b24332fdd.png)
 
 ### Unscheduling Snapshot
 Request takes snapshot_id as parameter and returns either successful confirmation of snapshot task removal or an error. Multiple snapshots require multiple removal requests. In future API revisions this, if needed, can be extended to support an array of snashot ID's per request
 
-![](https://hackmd.io/_uploads/rydQGdVss.png)
+![image](https://user-images.githubusercontent.com/79997103/212993890-5e8a0bd1-139a-49a5-9392-ae5134f98e52.png)
 
 ## :feet: Implementation
 
