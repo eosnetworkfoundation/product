@@ -3,10 +3,10 @@
 Continuing PR (https://github.com/AntelopeIO/leap/pull/558) (on branch https://github.com/AntelopeIO/leap/tree/send_read_only_trx), this document describes an approach to parallelize read-only transaction execution.
 
 ## Main Ideas
-The node toggles between `write` and `read` windows. In `write` window, the node operates normally, except queuing read-only transactions for later parallel execution. In `read` window, the node runs queued read-only transactions in a dedicated thread pool, while in parallel in the main and other threads runs operations which are safe to read-only transaction execution.
+The node toggles between `write` and `read` windows. In `write` window, the node operates normally, except queuing read-only transactions for later parallel execution in `read` window. In `read` window, the node runs queued read-only transactions in a dedicated thread pool, while in the main and other threads runs operations which are safe to read-only transaction execution.
 
 ## Existing Operation Analysis
-This section analyzes thread safety of existing operations. 
+This section analyzes existing operations' thread safety to read-only transaction execution.
 
 ### Chain APIs
 Chain APIs can be classified into reads and writes.
@@ -182,22 +182,22 @@ std::priority_queue<read_only_trx, std::deque<read_only_trx>, read_only_trx_less
 
 ### Configuration Options
 
-- `read-only-transaction-num-threads`: the number of threads in read-only transaction thread pool. Default to `0`. If `0`, multi-threaded execution is not used; read-only transactions are executed single threaded
-- `read-write-window-time`: time in milliseconds the read-write window runs. Default to 500 milliseconds
-- `read-only-window-time`: time in milliseconds the read-only window runs. Must be equal to or greater than `max-read-only-transaction-time`. Default to 200 milliseconds
-- `read-only-transaction-threshold`: when the number of queued read-only transactions reaches the threshold, node switches to read-only mode, even it is before the end of read-write window. Default to 0. If 0, this option is not used.
-- `read-only-window-margin`: when the time remains in the read-only window is less than the margin, no new transactions are scheduled in read-only threads. Default to 5 milliseconds.
+- `read-only-num-threads`: the number of threads in read-only transaction execution thread pool. Default to `0`. If it is `0`, read-only transactions are executed on the main thread sequentially as they arrive
+- `write-window-time`: time in milliseconds the `write` window lasts. Default to 500 milliseconds
+- `read-window-time`: time in milliseconds the `read` window lasts. Must be equal to or greater than `max-read-only-transaction-time`. Default to 200 milliseconds
+- `read-only-max-queued-time`: time in milliseconds when is exceeded by the time the earliest transaction, node switches to `read` window, even it is before the end of `write` window.
+- `read-window-min-time`: time in milliseconds which must be remained in the `read` window when new transactions are scheduled for execution. Default to 5 milliseconds. This is to avoid unnecessary incomplete transaction execution.
 - `max-read-only-transaction-time`: time in milliseconds a read-only transaction can execute before being considered invalid. Default to 150 milliseconds. This option has already been implemented by #558
 
 
 ## Thread Safety
 
 - Safety between read-only transaction threads and other `nodeos` threads
-   - _main_ thread: The `main` thread only performs read-only requests. It does not have any conflicts with read-only threads.
-   - _chain_ thread: `chain` threads are used in `apply_block`, `log_irreversible`, `finalize_block`,  `create_block_state_future`. Those do not run while in read-only window.
-   - _net_ thread: Non-read requests are reposted to the main thread. No conflicts with read-only transaction execution.
+   - _main_ thread: The `main` thread only performs functions safe to read-only transaction execution.
+   - _chain_ thread: `chain` threads are used in `apply_block`, `log_irreversible`, `finalize_block`,  `create_block_state_future`. Those do not run while in `read` window.
+   - _net_ thread: It is used for low-level networking. No conflicts with read-only transaction execution.
    - _http_ thread: It is used to receive requests and send back responses. No conflicts with read-only transaction execution.
-   - _prod_ thread: It is used in on_incoming_transaction_async, which is not running in read-only window
+   - _prod_ thread: It is used in `on_incoming_transaction_async`, which is not running in `read` window
    - _resource monitor_ thread: Resource monitor does not have any conflicts with any transaction execution.
 - Safety between read-only transaction threads: no writes are made into `chainbase` and global states when a read-only transaction is executed. This is achieved by PR #558
 
