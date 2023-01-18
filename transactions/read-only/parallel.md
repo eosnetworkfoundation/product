@@ -159,7 +159,7 @@ Several options are considered to handle
   - In `write` window, compare the priorities of the top functions in `read-only-safe` and `not-read-only-safe`. The one with higher priority is executed. If tied, three options are considered:
     - `not-read-only-safe` function is favored 
     - randomly pick one
-    - add a time attribute to the functions and earlier one is picked.
+    - add a time attribute to the functions and the older one is picked. This keeps the original behavior. Even though at a cost of the extra time field and an extra comparison, this option seems best.
 
 ### Read-only Transaction Priority Queue
 The queue is used to store read-only transactions during `write` window. To maintain the time order when a transaction is put back into the queue for the next round due to `red` window deadline, a priority queue based on the first time when a transaction is queued is used.
