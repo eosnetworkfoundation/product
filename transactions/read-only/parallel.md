@@ -136,8 +136,8 @@ SHiP receives blockchain state data, saves it to files, and sends data to nodes 
 
 Attempt is made to only introduce a minimum set of options. Other options might be added in the future if needed.
 - `read-only-transaction-threads`: number of worker threads in read-only transaction thread pool. If it is `0`, read-only transactions are executed on the main thread sequentially. Default to `0`. The number of the threads will be limited by the virtual memory size the system has (see https://github.com/AntelopeIO/leap/issues/645).
-- `read-only-write-window-time-ms`: time in milliseconds the `write` window lasts. For this option to take effect, `read-only-transaction-threads` must be set greater than 0. Default to 300 milliseconds. 
-- `read-only-read-window-time-ms`: time in milliseconds the `read` window lasts. For this option to take effect, `read-only-transaction-threads` must be set greater than 0. Default to 100 milliseconds.
+- `read-only-write-window-time-ms`: time in milliseconds the `write` window lasts. For this option to take effect, `read-only-transaction-threads` must be set greater than 0. Default to 200 milliseconds. 
+- `read-only-read-window-time-ms`: time in milliseconds the `read` window lasts. For this option to take effect, `read-only-transaction-threads` must be set greater than 0. Default to 60 milliseconds.
 
 Note: `read-only-max-transaction-time-ms` (time in milliseconds a read-only transaction can execute before being considered invalid) was considered. But to keep new options minimal, for now, use the existing `max-transaction-time` for read-only transactions.
 
@@ -187,6 +187,7 @@ flowchart TD
 - Comparing with executing all requests in the single main thread, offloading read-only transactions to a separate thread pool makes the time needed to process read-only transactions available for `write operations` and `read operations`, resulting more operations are processed. 
 - We are most concerned about starvation of block sync operation. Its priority is medium, which is higher than the majority of read operations. When `read window` is switched to `write window`, if the front operation in the write window queue is block sync, it is likely to be selected for execution. The worst case is a block sync at the front of the queue right before the execution window is switched to read-window. Configuring a small `read-only-read-window-ms` would reduce the waiting time for block sync. Another point is `write window` is switched to `read window` if there are read-only transactions in the read-only transaction queue; this means the main thread has already saves the time requried to executing those read-only transactions. The block sync is processed earlier than it would be in the existing single thread approach otherwise.
 - In `read window`, whenever read-only transaction queue becomes empty, `read window` is switched to `write window`. This helps to process any write operations earlier if they are available.
+- To prevent read-only transactions from stuck in `read window` and `write operations` from stuck in `write window` for too long, `read-only-write-window-ms` and `read-only-read-window-ms` should be configured to small numbers, especially when `read-only-transaction-threads` is set to be big. This promotes rapid toggling of the two windows and reducing starvation.
 
 
 ## Thread Safety In Read Window
