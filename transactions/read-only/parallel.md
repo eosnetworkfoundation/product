@@ -136,10 +136,10 @@ SHiP receives blockchain state data, saves it to files, and sends data to nodes 
 
 Attempt is made to only introduce a minimum set of options. Other options might be added in the future if needed.
 - `read-only-transaction-threads`: number of worker threads in read-only transaction thread pool. If it is `0`, read-only transactions are executed on the main thread sequentially. Default to `0`. The number of the threads will be limited by the virtual memory size the system has (see https://github.com/AntelopeIO/leap/issues/645).
-- `read-only-write-window-time-ms`: time in milliseconds the `write` window lasts. For this option to take effect, `read-only-transaction-threads` must be set greater than 0. Default to 200 milliseconds. 
-- `read-only-read-window-time-ms`: time in milliseconds the `read` window lasts. For this option to take effect, `read-only-transaction-threads` must be set greater than 0. Default to 60 milliseconds.
+- `read-only-write-window-time-us`: time in microseconds the `write` window lasts. For this option to take effect, `read-only-transaction-threads` must be set greater than 0. Default to `200,000` microseconds. 
+- `read-only-read-window-time-us`: time in microseconds the `read` window lasts. For this option to take effect, `read-only-transaction-threads` must be set greater than 0. Default to `60,000` microseconds.
 
-Note: `read-only-max-transaction-time-ms` (time in milliseconds a read-only transaction can execute before being considered invalid) was considered. But to keep new options minimal, for now, use the existing `max-transaction-time` for read-only transactions.
+Note: `read-only-max-transaction-ms` (time in milliseconds a read-only transaction can execute before being considered invalid) was considered. But to keep new options minimal, for now, use the existing `max-transaction-time` for read-only transactions.
 
 ### Data Structures 
 
@@ -154,7 +154,7 @@ In `write window`, operations in `write queue` and `read queue` are executed seq
 
 In `read window`, read-only transactions are executed in the read-only thread pool, while operations in `read operation queue` are executed in the main thread. Design details are:
 - At the start of `read-window`, all threads in the pool are signaled to start process read-only transactions. Each thread enters a loop of pulling one transaction a time from the front of the read-only transaction queue and executing it. New incoming read-only transactions are placed at the back of the queue. The queue is protected by mutex.
-- If less than 5% (hardcoded for now) of `read-only-read-window-time-ms` time remains in the `read window`, a thread will stop scheduling new transaction for execution and exit the execution loop.
+- If less than 5% (hardcoded for now) of `read-only-read-window-time-us` time remains in the `read window`, a thread will stop scheduling new transaction for execution and exit the execution loop.
 - At the end of the window, non-finished transactions are put to the front of the read-only transaction queue so that they can be executed the first in the next round.
 - Transactions exceeding `max-transaction-time` will be discarded and a proper response will be sent back.
 - Before a transaction is selected for execution, it is desirable to check if the HTTP connection is still up. If not, simply discard the transaction. A warning log or a stats should be generated so the node operator can adjust the configuration options or take any other actions like throttling read-only transactions.
@@ -206,8 +206,8 @@ flowchart TD
 - number of read-only threads is 0
 - number of read-only threads is 1
 - number of read-only transactions greater than number of threads
-- `read-only-write-window-time-ms` test
-- `read-only-read-window-time-ms` test
+- `read-only-write-window-time-us` test
+- `read-only-read-window-time-us` test
 - read-only transactions are processed within one read window
 - read-only transactions are processed in multiple read windows
 - initiate RPC requests while read-only transactions are executed
