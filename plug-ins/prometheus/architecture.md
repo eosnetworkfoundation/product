@@ -48,18 +48,43 @@ The library is somewhat heavy weight and contains dependencies that are not desi
 
 The prometheus-cpp library will be brought in as a submodule of leap, but the Prometheus plugin will only use the core part of the library, specifically the part that implements the serialization. 
 
-## Plugin
+# Prometheus Plugin
 
-A new Prometheus plugin will be created.  This plugin will interface with other plugins (chain_plugin, producer_plugin, http_plugin, net_plugin) to supply the data to be exposed.  Instrumentation will be need to be added in the plugin to capture some of these statistics. 
-A metrics() call will be added to plugins to get their specific stats (in a non-prometheus dependent fashion).
+A new prometheus_plugin will be created.  This plugin will interface with instrumented plugins (chain_plugin, producer_plugin, http_plugin, net_plugin, api plugins...) to supply the data to be exposed.  The various plugins will be need to be modified to capture some of these statistics, aka "instrumented". 
+The prometheus_plugin will receive data in a message-based format consisting of a collection of current metrics for the instrumented plugin.  The collection of metrics for a particular plugin may change over time and it will be up to the prometheus_plugin to manage retiring metrics that are no longer relevant.  Each instrumented
+plugin will have it's own particular update cycle based on what makes sense for the particular plugin.  During each update cycle, the instrumented plugins will post the collection of metrics to the prometheus_plugin (if enabled).  The prometheus_plugin will
+update its internal data model as these messages are received.
+
+## Prometheus Endpoint
+The prometheus_plugin will have one endpoint (/metrics) to support the pull functionality. The pull endpoint will be implemented on top of nodeos http_plugin, rather than civetweb.
+Data will be exported using the prometheus text-based exposition format.
+The http endpoint for the prometheus_plugin will utilize the prometheus strand to send client updates.  The plugin will receive requests on an http thread, which will immediately post a lambda to prometheus strand.  The request will pull the
+updated metric data from the prometheus data model and use the prometheus-cpp library to perform the serialization.  Requests will be bound by a timeout of 30ms.
 
 ## Instrumentation of plugins
 
-Each of the various plugins will be instrumented to collect various runtime metrics.  Each of the plugins will have a a plugin_metrics struct that is accessed via a metrics() call which returns a reference to the individualized plugin_metrics. 
-The plugin_metrics will contain a set of member runtime_metrics which consist of a type {gauge or counter}, a name and a label.  In addition to the member metrics, a vector of metrics will be maintained for the use of the prometheus plugin. None of the non-prometheus plugins will have any dependency on the prometheus-cpp library. 
-Synchronization will be managed through the use of std::atomic.  This will ensure that all metric values are in a coherent state.  It does not ensure that all of the metric values represent a coherent 'snapshot' of a point (eg. it is possible that not all producer plugin values represent the state at a specific block).
+Each of the instrumented plugins will have a register_metrics_listener() method to register a std::function that takes a vector of runtime_metrics.  Instrumented plugins will each maintain a specialized plugin_metrics structure (see below).  The plugin will pass delegate the register_listener() method to the plugin_metrics struct. The plugin_metrics struct will manage the update cycle
+to enforce a clean 'snapshot' view of all the metric data for a plugin.
 
-## Initial Intrumentation
+A plugin_metrics base class will provided for plugins to support collecting/publishing metrics to the prometheus_plugin (or potentially some other metrics publisher in the future). Each plugin will extend the base class and include runtime_metrics as members of the base class.
+Each plugin implement a virtual function metrics(), which will collect all relevant metrics and insert them into a vector for processing by the prometheus_plugin.
+
+The register_listener() method on plugin_metrics will be used by the prometheus plugin to register a lambda to perform the metrics update.
+The lambda will post to a strand, backed by a named_thread pool (consisting of a single thread).  The lambda posted to the strand will perform the metrics update inside the prometheus_plugin.
+Each plugin will have it's own update cycle - for instance the producer_plugin will update on each block.  The instrumented plugins will report their metrics update via the post_metrics() method on the plugin_metrics object.
+The post_metrics method will check the should_post() method to verify that it should actually update the prometheus_plugin by calling should_post().  The should_post method will check to see if there is a registered listener and verify that enough time has elapsed since
+the last post.  The default throttling will be to ensure that there is no more than one post per 250ms.
+
+```C++
+struct plugin_metrics {
+   virtual vector<runtime_metric> metrics()=0;
+   bool should_post();
+   bool post_metrics();
+   void register_listener(metrics_listener listener);
+};
+```
+
+# Initial Intrumentation
 An initial phase of instrumentation will allow for the evaluation of the usability of the instrumentation when viewed from Prometheus.  The initial instrumentation will not include any per account or per contract metrics.  Additionally, the ability to expire metrics will not be included in the initial phase. To support dynamic metrics, the metric object for each plugin will include an indicator of when the set of metrics has last changed.  The following metrics will be collected for the initial phase of instrumentation:
 
 ## Net Plugin
@@ -80,7 +105,7 @@ Producer plugin metrics will be gathered at the start of each block.
 * gauge - subjective billing number of blocks
 * gauge - scheduled transactions
  
-## Subsequent Instrumentation
+# Subsequent Instrumentation
 After the initial evaluation the following metrics will be added:
 
 * gauge - unapplied transaction queue
@@ -100,6 +125,3 @@ After the initial evaluation the following metrics will be added:
 * gauge - disk space in bytes available
 * gauge - number of dropped blocks
  
-## Prometheus Endpoint
-The prometheus_plugin will have one endpoint (/metrics) to support the pull functionality. The pull endpoint will be implemented on top of nodeos http_plugin, rather than civetweb.
-Data will be exported using the text-based exposition format.
