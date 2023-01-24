@@ -143,16 +143,16 @@ Note: `read-only-max-transaction-ms` (time in milliseconds a read-only transacti
 
 ### Data Structures 
 
-Three queues are proposed: `appbase`'s `execution_priority_queue` is replaced with read operation queue and write operation queue, and a new read-only transaction queue is added.
-- `read operation queue` stores read operations which are safe to read-only transaction execution. It is a priority queue sorted by operation priority. When an operation is inserted into `read operation queue` or `write operation queue`, a global sequence number is incremented. This sequence number is stored together with each operation.
-- `write operation queue` stores write operations which are not safe to read-only transaction execution. It uses the same type of priority queue as in `read operation queue`.
+Three queues are proposed: the existing internal priority queue in `execution_priority_queue` of appbase is replaced with read operation queue and write operation queue, and a new read-only transaction queue is added.
+- `read operation queue` stores read operations which are safe to read-only transaction execution. `appbase`'s `post` method is enhanced to have a new parameter indicating opertion type.
+- `write operation queue` stores write operations which are not safe to read-only transaction execution.
 - `read-only transaction queue` stores read-only transactions. It is a deque.
 
 ### Window Processing
 
-In `write window`, operations in `write queue` and `read queue` are executed sequentially in the main thread, while read-only transactions are queued in the read-only transaction queue for later execution. To select next operation to be executed, front entries in `write operation queue` and `read operation queue` are compared; the one with higher priority is chosen. If the priorities are tied, the sequence numbers are compared; the one with smaller number (earlier) is selected. This keeps the new behavior as close as to the existing behavior.
+In `write window`, operations in `write operation queue` and `read operation queue` are executed by the main thread, while read-only transactions are queued in the read-only transaction queue for later execution in the `read window`. To select next operation to execute, priority and order of front entries in `write operation queue` and `read operation queue` are compared; the one with higher priority or higher order (older) is chosen. This is the existing behavior.
 
-In `read window`, read-only transactions are executed in the read-only thread pool, while operations in `read operation queue` are executed in the main thread. Design details are:
+In `read window`, only operations in `read operation queue` are executed by the main thread, and transactions in read-only queue are executed by the read-only. Design details are:
 - At the start of `read-window`, all threads in the pool are signaled to start process read-only transactions. Each thread enters a loop of pulling one transaction a time from the front of the read-only transaction queue and executing it. New incoming read-only transactions are placed at the back of the queue. The queue is protected by mutex.
 - If less than 5% (hardcoded for now) of `read-only-read-window-time-us` time remains in the `read window`, a thread will stop scheduling new transaction for execution and exit the execution loop.
 - At the end of the window, non-finished transactions are put to the front of the read-only transaction queue so that they can be executed the first in the next round.
