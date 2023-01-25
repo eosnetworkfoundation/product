@@ -28,16 +28,16 @@ Following considerations/design decisions were also expressed:
 
 | **API URL** 	| **Purpose** 	| **Parameters** 	|
 |----------	|----------	|----------	|
-| /producer/schedule_snapshot         	| Adds a task to perform snapshot         	| start_block, end_block, blocks_count, snapshot_description     	|
+| /producer/schedule_snapshot         	| Adds a task to perform snapshot         	| start_block, end_block, block_spacing, snapshot_description     	|
 | /producer/get_snapshot_requests         	| Returns scheduled snapshot requests         	| start_snapshot_request_id, limit (number of snapshots to return)         	|
 | /producer/get_snapshot_request_status         	| Queries status of a snapshot request        	| Snapshot ID         	|
 | /producer/unschedule_snapshot         	| Removes previously scheduled snapshot task         	| Snapshot ID         	|
 
 ### Scheduling Snapshot
-- request takes 4 optional parameters - start_block, end_block, blocks_count, snapshot_description:
-    - start_block: first block at which snapshot will be taken, if not set, will be taken immediately similar to an old create_snapshot call
-    - end_block: block number at which schedule for the snapshot will be no longer active and snapshot task will be automatically removed. If end_block is not specified, snapshot task will never be auto removed and needs to be unscheduled with another api call to stop
-    - blocks_count - number of blocks after which a recurring snapshot will be made. If not set, snapshot will be done only once and scheduled task will be removed
+- request takes 4 optional parameters - start_block, end_block, block_spacing, snapshot_description:
+    - start_block: first block after which snapshot will be taken, if not set, will be taken immediately similar to an old create_snapshot call
+    - end_block: block number after which schedule for the snapshot will be no longer active and snapshot task will be automatically removed. If end_block is not specified, snapshot task will never be auto removed and needs to be unscheduled with another api call to stop
+    - block_spacing - number of blocks after which a recurring snapshot will be made. If not set, snapshot will be done only once and scheduled task will be removed
     - snapshot_description - optional description of the snapshot
 - in case of success api call should return json describing scheduled snapshot task which should contain unique snapshot request id
 - in case of error a descriptive message and error code should be returned
@@ -91,7 +91,7 @@ Database, probably in a form of a json file, will be used to hold snapshot sched
          "snapshot_request_time": "2020-11-16T00:00:00.000Z",
          "snapshot_request_id": 0,
          "snapshot_description": "Example of recurring snapshot",
-         "blocks_count": 100,
+         "block_spacing": 100,
          "start_block_num": 5000,
          "end_block_num": 10000,
 
@@ -100,7 +100,7 @@ Database, probably in a form of a json file, will be used to hold snapshot sched
          "snapshot_request_time": "2020-11-16T00:00:10.000Z",
          "snapshot_request_id": 1,
          "snapshot_description": "Example of one-time snapshot",
-         "blocks_count": 0,
+         "block_spacing": 0,
          "start_block_num": 5200,
          "end_block_num": 5200,
 
@@ -157,7 +157,7 @@ will return:
          "snapshot_request_time": "2020-11-16T00:00:00.000Z",
          "snapshot_request_id": 0,
          "snapshot_description": "",
-         "blocks_count": 0,
+         "block_spacing": 0,
          "start_block_num": 288076281,
          "end_block_num": 288076281,
 }
@@ -167,7 +167,7 @@ will return:
 ```shell
 curl -X POST http://127.0.0.1:8888/v1/producer/schedule_snapshot
    -H 'Content-Type: application/json'
-   -d '{"blocks_count":"1000","start_block_number":"288076281", "end_block_number":"388076281"}'
+   -d '{"block_spacing":"1000","start_block_number":"288076281", "end_block_number":"388076281"}'
 ```
 will return:
 ```json
@@ -175,7 +175,7 @@ will return:
          "snapshot_request_time": "2020-11-16T00:00:00.000Z",
          "snapshot_request_id": 0,
          "snapshot_description": "",
-         "blocks_count": 1000,
+         "block_spacing": 1000,
          "start_block_num": 288076281,
          "end_block_num": 388076281,
 }
@@ -185,7 +185,7 @@ will return:
 ```shell
 curl -X POST http://127.0.0.1:8888/v1/producer/schedule_snapshot
    -H 'Content-Type: application/json'
-   -d '{"blocks_count":"1000","start_block_number":"288076281","snapshot_description":"Example of recurring snapshot"}'
+   -d '{"block_spacing":"1000","start_block_number":"288076281","snapshot_description":"Example of recurring snapshot"}'
 ```
 will return:
 ```json
@@ -193,7 +193,7 @@ will return:
          "snapshot_request_time": "2020-11-16T00:00:00.000Z",
          "snapshot_request_id": 0,
          "snapshot_description": "Example of recurring snapshot",
-         "blocks_count": 1000,
+         "block_spacing": 1000,
          "start_block_num": 288076281,
          "end_block_num": 0,
 }
@@ -211,7 +211,7 @@ will return:
          "snapshot_request_time": "2020-11-16T00:00:00.000Z",
          "snapshot_request_id": 0,
          "snapshot_description": "",
-         "blocks_count": 0,
+         "block_spacing": 0,
          "start_block_num": 288076281,
          "end_block_num": 288076281,
 }
@@ -231,7 +231,7 @@ will return:
          "snapshot_request_time": "2020-11-16T00:00:00.000Z",
          "snapshot_request_id": 0,
          "snapshot_description": "Example of recurring snapshot",
-         "blocks_count": 100,
+         "block_spacing": 100,
          "start_block_num": 5000,
          "end_block_num": 10000,
     },
@@ -239,7 +239,7 @@ will return:
          "snapshot_request_time": "2020-11-16T00:00:10.000Z",
          "snapshot_request_id": 1,
          "snapshot_description": "Example of one-time snapshot",
-         "blocks_count": 0,
+         "block_spacing": 0,
          "start_block_num": 5200,
          "end_block_num": 5200,
     }
@@ -261,7 +261,7 @@ will return:
          "snapshot_request_time": "2020-11-16T00:00:00.000Z",
          "snapshot_request_id": 1,
          "snapshot_description": "Example of recurring snapshot",
-         "blocks_count": 0,
+         "block_spacing": 0,
          "start_block_num": 5000,
          "end_block_num": 10000,
          "pending_snapshots": [
@@ -299,7 +299,7 @@ will return:
          "snapshot_request_time": "2020-11-16T00:00:00.000Z",
          "snapshot_request_id": 1,
          "snapshot_description": "Example of recurring snapshot",
-         "blocks_count": 0,
+         "block_spacing": 0,
          "start_block_num": 288076281,
          "end_block_num": 288076281,
 }
@@ -322,16 +322,16 @@ will return:
             schema:
               type: object
               properties:
-                blocks_count:
+                block_spacing:
                   type: integer
-                  description: Generate snapshot every blocks_count blocks
+                  description: Generate snapshot every block_spacing blocks
                 start_block_num:
                   type: integer
-                  description: Block number at which schedule starts
+                  description: Block number after which schedule starts
                   example: 5102
                 end_block_num:
                   type: integer
-                  description: Block number at which schedule ends
+                  description: Block number after which schedule ends
                   example: 15102
                 snapshot_description:
                     type: string
@@ -349,16 +349,16 @@ will return:
                     snapshot_request_id:
                       type: integer
                       description: Unique id identifying current snapshot request
-                    blocks_count:
+                    block_spacing:
                       type: integer
-                      description: Generate snapshot every blocks_count blocks
+                      description: Generate snapshot every block_spacing blocks
                     start_block_num:
                       type: integer
-                      description: Block number at which schedule starts
+                      description: Block number after which schedule starts
                       example: 5102
                     end_block_num:
                       type: integer
-                      description: Block number at which schedule ends
+                      description: Block number after which schedule ends
                       example: 15102
                     snapshot_description:
                         type: string
@@ -414,16 +414,16 @@ will return:
                           snapshot_request_id:
                             type: integer
                             description: Unique id identifying current snapshot request
-                          blocks_count:
+                          block_spacing:
                             type: integer
-                            description: Generate snapshot every blocks_count blocks
+                            description: Generate snapshot every block_spacing blocks
                           start_block_num:
                             type: integer
-                            description: Block number at which schedule starts
+                            description: Block number after which schedule starts
                             example: 5102
                           end_block_num:
                             type: integer
-                            description: Block number at which schedule ends
+                            description: Block number after which schedule ends
                             example: 15102
                           snapshot_description:
                               type: string
@@ -466,16 +466,16 @@ will return:
                     type: string
                     description: Snapshot unix timestamp
                     example: 2020-11-16T00:00:00.000
-                  blocks_count:
+                  block_spacing:
                     type: integer
-                    description: Generate snapshot every blocks_count blocks
+                    description: Generate snapshot every block_spacing blocks
                   start_block_num:
                     type: integer
-                    description: Block number at which schedule starts
+                    description: Block number after which schedule starts
                     example: 5102
                   end_block_num:
                     type: integer
-                    description: Block number at which schedule ends
+                    description: Block number after which schedule ends
                     example: 15102
                   snapshot_description:
                       type: string
@@ -539,16 +539,16 @@ will return:
                   snapshot_request_id:
                       type: integer
                       description: Unique id identifying current snapshot request
-                  blocks_count:
+                  block_spacing:
                     type: integer
-                    description: Generate snapshot every blocks_count blocks
+                    description: Generate snapshot every block_spacing blocks
                   start_block_num:
                     type: integer
-                    description: Block number at which schedule starts
+                    description: Block number after which schedule starts
                     example: 5102
                   end_block_num:
                     type: integer
-                    description: Block number at which schedule ends
+                    description: Block number after which schedule ends
                     example: 15102
                   snapshot_description:
                       type: string
