@@ -56,7 +56,7 @@ This endpoint will return all scheduled snapshot requests with pagination - star
 
 For each snapshot request returned a list of associated snapshots (if any) will be returned
 
-![image](https://user-images.githubusercontent.com/79997103/212993725-debd027e-05d0-490b-bbe4-ee95e5d1820e.png)
+![image](https://user-images.githubusercontent.com/79997103/214669348-b6d94abb-6a36-4d09-b1dc-73468ea97ef8.png)
 
 ### Unscheduling Snapshot
 Request takes snapshot_id as parameter and returns either successful confirmation of snapshot task removal or an error. Multiple snapshots require multiple removal requests. In future API revisions this, if needed, can be extended to support an array of snashot ID's per request
