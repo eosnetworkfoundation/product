@@ -30,7 +30,6 @@ Following considerations/design decisions were also expressed:
 |----------	|----------	|----------	|
 | /producer/schedule_snapshot         	| Adds a task to perform snapshot         	| start_block, end_block, block_spacing, snapshot_description     	|
 | /producer/get_snapshot_requests         	| Returns scheduled snapshot requests         	| start_snapshot_request_id, limit (number of snapshots to return)         	|
-| /producer/get_snapshot_request_status         	| Queries status of a snapshot request        	| Snapshot ID         	|
 | /producer/unschedule_snapshot         	| Removes previously scheduled snapshot task         	| Snapshot ID         	|
 
 ### Scheduling Snapshot
@@ -53,14 +52,11 @@ Please note that single snapshot request can trigger and correspond to multiple 
 ![image](https://user-images.githubusercontent.com/79997103/212993658-af39ac43-ee64-4578-8d8f-4cbe16dba1da.png)
 
 ### Retrieving Snapshot Requests
-This endpoint will return all scheduled snapshot requests with pagination - starting from snapshot determined by 'start_snapshot_request_id' (optional) and returning 'limit' number of snapshots
+This endpoint will return all scheduled snapshot requests with pagination - starting from snapshot determined by 'start_snapshot_request_id' (optional) and returning 'limit' number of snapshots (optional as well)
+
+For each snapshot request returned a list of associated snapshots (if any) will be returned
 
 ![image](https://user-images.githubusercontent.com/79997103/212993725-debd027e-05d0-490b-bbe4-ee95e5d1820e.png)
-
-### Retrieving Snapshot Status
-Request takes snapshot_id as parameter and either returns object describing scheduled snapshot or an error
-
-![image](https://user-images.githubusercontent.com/79997103/212993777-69c841d7-01a3-4565-b925-696b24332fdd.png)
 
 ### Unscheduling Snapshot
 Request takes snapshot_id as parameter and returns either successful confirmation of snapshot task removal or an error. Multiple snapshots require multiple removal requests. In future API revisions this, if needed, can be extended to support an array of snashot ID's per request
@@ -234,36 +230,6 @@ will return:
          "block_spacing": 100,
          "start_block_num": 5000,
          "end_block_num": 10000,
-    },
-    {
-         "snapshot_request_time": "2020-11-16T00:00:10.000Z",
-         "snapshot_request_id": 1,
-         "snapshot_description": "Example of one-time snapshot",
-         "block_spacing": 0,
-         "start_block_num": 5200,
-         "end_block_num": 5200,
-    }
- ],
- "next_request_id": null
-}
-
-```
-
-#### Get snapshot request status by ID
-```shell
-curl -X POST http://127.0.0.1:8888/v1/producer/get_snapshot_request_status
-   -H 'Content-Type: application/json'
-   -d '{"snapshot_request_id":"1"}'
-```
-will return:
-```json
- {
-         "snapshot_request_time": "2020-11-16T00:00:00.000Z",
-         "snapshot_request_id": 1,
-         "snapshot_description": "Example of recurring snapshot",
-         "block_spacing": 0,
-         "start_block_num": 5000,
-         "end_block_num": 10000,
          "pending_snapshots": [
              {
                  "head_block_id": "ABC",
@@ -282,10 +248,23 @@ will return:
                  "triggering_requests": [0]
              }
         ]
-}
-```
+    },
+    {
+         "snapshot_request_time": "2020-11-16T00:00:10.000Z",
+         "snapshot_request_id": 1,
+         "snapshot_description": "Example of one-time snapshot",
+         "block_spacing": 0,
+         "start_block_num": 5200,
+         "end_block_num": 5200,
+         "pending_snapshots": [
+         ]
 
-Output includes pending snapshot(s) triggered by that specific snapshot request.
+    }
+ ],
+ "next_request_id": null
+}
+
+```
 
 #### Unschedule snapshot by ID
 ```shell
@@ -311,7 +290,8 @@ will return:
 :bulb: This can be found in snapshot-api branch, file: plugins/producer_api_plugin/producer.swagger.yaml
 
 ```yaml
-/producer/schedule_snapshot:
+
+  /producer/schedule_snapshot:
     post:
       summary: schedule_snapshot
       description: Submits a request to generate a schedule for automated snapshot with given parameters. If request body is empty, triest to execute snapshot immediately. Returns error when unable to create snapshot.
@@ -322,16 +302,16 @@ will return:
             schema:
               type: object
               properties:
-                block_spacing:
+                blocks_count:
                   type: integer
-                  description: Generate snapshot every block_spacing blocks
+                  description: Generate snapshot every blocks_count blocks
                 start_block_num:
                   type: integer
-                  description: Block number after which schedule starts
+                  description: Block number at which schedule starts
                   example: 5102
                 end_block_num:
                   type: integer
-                  description: Block number after which schedule ends
+                  description: Block number at which schedule ends
                   example: 15102
                 snapshot_description:
                     type: string
@@ -349,16 +329,16 @@ will return:
                     snapshot_request_id:
                       type: integer
                       description: Unique id identifying current snapshot request
-                    block_spacing:
+                    blocks_count:
                       type: integer
-                      description: Generate snapshot every block_spacing blocks
+                      description: Generate snapshot every blocks_count blocks
                     start_block_num:
                       type: integer
-                      description: Block number after which schedule starts
+                      description: Block number at which schedule starts
                       example: 5102
                     end_block_num:
                       type: integer
-                      description: Block number after which schedule ends
+                      description: Block number at which schedule ends
                       example: 15102
                     snapshot_description:
                         type: string
@@ -414,98 +394,45 @@ will return:
                           snapshot_request_id:
                             type: integer
                             description: Unique id identifying current snapshot request
-                          block_spacing:
+                          blocks_count:
                             type: integer
-                            description: Generate snapshot every block_spacing blocks
+                            description: Generate snapshot every blocks_count blocks
                           start_block_num:
                             type: integer
-                            description: Block number after which schedule starts
+                            description: Block number at which schedule starts
                             example: 5102
                           end_block_num:
                             type: integer
-                            description: Block number after which schedule ends
+                            description: Block number at which schedule ends
                             example: 15102
                           snapshot_description:
                               type: string
                               description: Description of the snapshot
                               example: Daily snapshot
-        "400":
-          description: client error
-          content:
-            application/json:
-              schema:
-                $ref: "#/component/schema/Error"
-
-  /producer/get_snapshot_request_status:
-    post:
-      summary: get_snapshot_request_status
-      description: Queries a status of the existing scheduled snapshot. Returns error when unable to find snapshot requested or query its status.
-      operationId: get_snapshot_status
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                snapshot_request_id:
-                  type: integer
-                  description: snapshot id
-      responses:
-        "201":
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  snapshot_request_id:
-                    type: integer
-                    description: Unique id identifying current snapshot request
-                  snapshot_request_time:
-                    type: string
-                    description: Snapshot unix timestamp
-                    example: 2020-11-16T00:00:00.000
-                  block_spacing:
-                    type: integer
-                    description: Generate snapshot every block_spacing blocks
-                  start_block_num:
-                    type: integer
-                    description: Block number after which schedule starts
-                    example: 5102
-                  end_block_num:
-                    type: integer
-                    description: Block number after which schedule ends
-                    example: 15102
-                  snapshot_description:
-                      type: string
-                      description: Description of the snapshot
-                      example: Daily snapshot
-                  pending_snapshots:
-                      type: array
-                      description: List of pending snapshots
-                      items:
-                        type: object
-                        properties:
-                          head_block_id:
-                            $ref: "https://docs.eosnetwork.com/openapi/v2.0/Sha256.yaml"
-                          head_block_num:
-                            type: integer
-                            description: Highest block number on the chain
-                            example: 5102
-                          head_block_time:
-                            type: string
-                            description: Highest block unix timestamp
-                            example: 2020-11-16T00:00:00.000
-                          version:
-                            type: integer
-                            description: version number
-                            example: 6
-                          snapshot_name:
-                            type: string
-                            description: The path and file name of the snapshot
-                            example: /home/me/nodes/node-name/snapshots/snapshot-0000999f99999f9f999f99f99ff9999f999f9fff99ff99ffff9f9f9fff9f9999.bin
-
+                          pending_snapshots:
+                            type: array
+                            description: List of pending snapshots
+                            items:
+                              type: object
+                              properties:
+                                head_block_id:
+                                  $ref: "https://docs.eosnetwork.com/openapi/v2.0/Sha256.yaml"
+                                head_block_num:
+                                  type: integer
+                                  description: Highest block number on the chain
+                                  example: 5102
+                                head_block_time:
+                                  type: string
+                                  description: Highest block unix timestamp
+                                  example: 2020-11-16T00:00:00.000
+                                version:
+                                  type: integer
+                                  description: version number
+                                  example: 6
+                                snapshot_name:
+                                  type: string
+                                  description: The path and file name of the snapshot
+                                  example: /home/me/nodes/node-name/snapshots/snapshot-0000999f99999f9f999f99f99ff9999f999f9fff99ff99ffff9f9f9fff9f9999.bin
         "400":
           description: client error
           content:
@@ -539,16 +466,16 @@ will return:
                   snapshot_request_id:
                       type: integer
                       description: Unique id identifying current snapshot request
-                  block_spacing:
+                  blocks_count:
                     type: integer
-                    description: Generate snapshot every block_spacing blocks
+                    description: Generate snapshot every blocks_count blocks
                   start_block_num:
                     type: integer
-                    description: Block number after which schedule starts
+                    description: Block number at which schedule starts
                     example: 5102
                   end_block_num:
                     type: integer
-                    description: Block number after which schedule ends
+                    description: Block number at which schedule ends
                     example: 15102
                   snapshot_description:
                       type: string
@@ -560,7 +487,6 @@ will return:
             application/json:
               schema:
                 $ref: "#/component/schema/Error"
-
 ```
 
 ###### tags: `Proposal` `Snapshot API`
