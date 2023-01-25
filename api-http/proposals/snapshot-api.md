@@ -40,6 +40,7 @@ Following considerations/design decisions were also expressed:
     - snapshot_description - optional description of the snapshot
 - in case of success api call should return json describing scheduled snapshot task which should contain unique snapshot request id
 - in case of error a descriptive message and error code should be returned
+- there should be a safeguard in place (in a form of hardcoded value, for example) of maximum amount of snapshots that can be scheduled
 
 As an additional consideration when scheduling a snapshot should be it's alignment with previously scheduled snapshots. Some examples of possible cases:
 - Duplicate snapshot requests should be rejected
