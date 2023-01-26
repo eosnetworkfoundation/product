@@ -5,7 +5,7 @@ Currently all transactions are executed in the main thread. To take advantage of
 Continuing the work to support read-only transaction RPC by PR (https://github.com/AntelopeIO/leap/pull/558) (on branch https://github.com/AntelopeIO/leap/tree/send_read_only_trx), this document describes an approach to parallelize read-only transaction execution.
 
 ## Main Ideas
-The node toggles between `write` and `read` windows. In `write` window, the node operates normally, except read-only transactions are queued for later parallel execution in `read` window. In `read` window, the queued read-only transactions are executed in a dedicated thread pool, while operations which are safe to read-only transaction execution are executed in the main thread.
+The node toggles between `write` and `read` windows. In `write` window, the node operates normally, except read-only transactions are queued for later parallel execution in `read` window. In `read` window, the queued read-only transactions are executed in a dedicated thread pool, while operations safe to read-only transaction execution are executed by the main thread.
 
 Several terms are defined to help understand the design.
 
@@ -51,12 +51,12 @@ Chain APIs are received on the HTTP thread, processed on the main thread (and pr
 | get_accounts_by_authorizers     | medium_low  | none                                                 | yes                    |
 | get_transaction_status          | medium_low  | none                                                 | yes                    |
 | send_read_only_transaction      | medium_low  | none                                                 | yes                    |
-| compute_transaction             | low         | main thread: temporally change chainbase             | no        |
-| push_block                      | medium_low  | main thread: chainbase, forkdb, producer, controller | no |
-| push_transaction                | low         | main thread: chainbase, forkdb, producer, controller | no |
-| push_transactions               | low         | main thread: chainbase, forkdb, producer, controller | no |
-| send_transaction                | low         | main thread: chainbase, forkdb, producer, controller | no |
-| send_transaction2               | low         | main thread: chainbase, forkdb, producer, controller | no |
+| compute_transaction             | low         | main thread: temporally change chainbase             | no                     |
+| push_block                      | medium_low  | main thread: chainbase, forkdb, producer, controller | no                     |
+| push_transaction                | low         | main thread: chainbase, forkdb, producer, controller | no                     |
+| push_transactions               | low         | main thread: chainbase, forkdb, producer, controller | no                     |
+| send_transaction                | low         | main thread: chainbase, forkdb, producer, controller | no                     |
+| send_transaction2               | low         | main thread: chainbase, forkdb, producer, controller | no                     |
 
 
 ### Producer APIs
@@ -136,21 +136,21 @@ SHiP receives blockchain state data, saves it to files, and sends data to nodes 
 
 Attempt is made to only introduce a minimum set of options. Other options might be added in the future if needed.
 - `read-only-transaction-threads`: number of worker threads in read-only transaction thread pool. If it is `0`, read-only transactions are executed on the main thread sequentially. Default to `0`. The number of the threads will be limited by the virtual memory size the system has (see https://github.com/AntelopeIO/leap/issues/645).
-- `read-only-write-window-time-us`: time in microseconds the `write` window lasts. For this option to take effect, `read-only-transaction-threads` must be set greater than 0. Default to `200,000` microseconds. 
-- `read-only-read-window-time-us`: time in microseconds the `read` window lasts. For this option to take effect, `read-only-transaction-threads` must be set greater than 0. Default to `60,000` microseconds.
+- `read-only-write-window-time-us`: time in microseconds the `write` window lasts. For this option to take effect, `read-only-transaction-threads` must be set to greater than 0. Default to `200,000` microseconds. 
+- `read-only-read-window-time-us`: time in microseconds the `read` window lasts. For this option to take effect, `read-only-transaction-threads` must be set to greater than 0. Default to `60,000` microseconds.
 
 Note: `read-only-max-transaction-ms` (time in milliseconds a read-only transaction can execute before being considered invalid) was considered. But to keep new options minimal, for now, use the existing `max-transaction-time` for read-only transactions.
 
 ### Data Structures 
 
 Three queues are proposed: the existing internal priority queue in `execution_priority_queue` of appbase is replaced with read operation queue and write operation queue, and a new read-only transaction queue is added.
-- `read operation queue` stores read operations which are safe to read-only transaction execution. `appbase`'s `post` method is enhanced to have a new parameter indicating opertion type.
-- `write operation queue` stores write operations which are not safe to read-only transaction execution.
+- `read operation queue` stores read operations safe to read-only transaction execution. Those operations are executed in both `read window` and `write window`. `appbase`'s `post` method is enhanced to have a new parameter indicating operation type.
+- `write operation queue` stores write operations not safe to read-only transaction execution. Those operations are only executed in `write` window.
 - `read-only transaction queue` stores read-only transactions. It is a deque.
 
 ### Window Processing
 
-In `write window`, operations in `write operation queue` and `read operation queue` are executed by the main thread, while read-only transactions are queued in the read-only transaction queue for later execution in the `read window`. To select next operation to execute, priority and order of front entries in `write operation queue` and `read operation queue` are compared; the one with higher priority or higher order (older) is chosen. This is the existing behavior.
+In `write window`, operations in `write operation queue` and `read operation queue` are executed by the main thread, while read-only transactions are queued in the read-only transaction queue for later execution in the `read window`. To select next operation to execute, priorities of the front operation in `write operation queue` and the front operation in `read operation queue` are compared; the one with higher priority is chosen. If the priorities are tied, the sequence numbers (`order` field in the existing code base) are compared; the one scheduled earlier is selected. This is the existing behavior.
 
 In `read window`, only operations in `read operation queue` are executed by the main thread, and transactions in read-only queue are executed by the read-only. Design details are:
 - At the start of `read-window`, all threads in the pool are signaled to start process read-only transactions. Each thread enters a loop of pulling one transaction a time from the front of the read-only transaction queue and executing it. New incoming read-only transactions are placed at the back of the queue. The queue is protected by mutex.
@@ -175,7 +175,7 @@ flowchart TD
     C -->|yes| A
     C -->|no| R(((read window)))
     
-    R -->|transaction execution| S[read-only trx queue empty?]
+    R -->|read-only trx executed| S[read-only trx queue empty agreed by all the threads?]
     S -->|yes| A
     S -->|no| R
     R -->|timer progressing| T[read_window_deadline passed?]
@@ -184,10 +184,11 @@ flowchart TD
 ```
 
 ### Requests Starvation Discussion
-- Comparing with executing all requests in the single main thread, offloading read-only transactions to a separate thread pool makes the time needed to process read-only transactions available for `write operations` and `read operations`, resulting more operations are processed. 
-- We are most concerned about starvation of block sync operation. Its priority is medium, which is higher than the majority of read operations. When `read window` is switched to `write window`, if the front operation in the write window queue is block sync, it is likely to be selected for execution. The worst case is a block sync at the front of the queue right before the execution window is switched to read-window. Configuring a small `read-only-read-window-ms` would reduce the waiting time for block sync. Another point is `write window` is switched to `read window` if there are read-only transactions in the read-only transaction queue; this means the main thread has already saves the time requried to executing those read-only transactions. The block sync is processed earlier than it would be in the existing single thread approach otherwise.
+- Comparing with executing all requests in the single main thread, offloading read-only transactions to a separate thread pool makes the time used to execute them available for other operations, resulting more operations are processed. 
+- We are most concerned about starvation of NET `signed_block` message. Its priority is medium, which is higher than the majority of read operations. When `read window` is switched to `write window`, if the front operation in the write window queue is block sync, it is likely to be selected for execution. The worst case is a `signed_block` at the front of the queue right after the execution window is switched to `read window`, resulting in the `signed_block` message waits for the whole duration of `read window`. Configuring a small `read-only-read-window-ms` would reduce the waiting time for `signed_block`. Furthermore, `write window` is switched to `read window` only when there are read-only transactions in the read-only transaction queue; this means the main thread has already saved the time required to executing those read-only transactions. The `signed_block` is processed earlier than it would be in the existing single thread approach otherwise.
+- Other operations not safe to read-only transactions are `compute_transaction` (low priority), `push_transaction` (low), `push_transactions` (low), `send_transaction` (low), `send_transaction2` (low), `push_block` (medium_low), `set_whitelist_blacklist` (medium_high), `schedule_protocol_feature_activations` (medium_high), `packed_transaction` (low). Those operations with low priority would not be scheduled even allowed to, if operations safe to read-only transactions are queued. `set_whitelist_blacklist` and `schedule_protocol_feature_activations` are not used frequently, `send_block` mostly not used (can be deprecated).
 - In `read window`, whenever read-only transaction queue becomes empty, `read window` is switched to `write window`. This helps to process any write operations earlier if they are available.
-- To prevent read-only transactions from stuck in `read window` and `write operations` from stuck in `write window` for too long, `read-only-write-window-ms` and `read-only-read-window-ms` should be configured to small numbers, especially when `read-only-transaction-threads` is set to be big. This promotes rapid toggling of the two windows and reducing starvation.
+- To prevent read-only transactions from stuck in `read window` and prevent `write operations` from stuck in `write window` for too long, `read-only-write-window-ms` and `read-only-read-window-ms` should be configured to be small numbers, especially when `read-only-transaction-threads` is set to a big number (which results in more read-only transactions can be executed in shorter time). This promotes rapid toggling of the two windows and reducing starvation.
 
 
 ## Thread Safety In Read Window
