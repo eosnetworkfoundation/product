@@ -1,7 +1,7 @@
 # Prometheus Plugin Architecture
 
 This document describes the architecture for the Prometheus Plugin (eosio::prometheus_plugin).  The Prometheus Plugin instruments nodes in order to allow
-data to be collected from [Prometheus](https://prometheus.io/).  The requirements for this plugin are extracted from this [Github issue](https://github.com/eosnetworkfoundation/mandel/issues/67):
+data to be collected for [Prometheus](https://prometheus.io/).  The requirements for this plugin are extracted from this [Github issue](https://github.com/eosnetworkfoundation/mandel/issues/67):
 
 > For monitoring, nodeos should have a prometheus exporter plugin (that runs on a separate port), which exposes key metrics that would be useful for monitoring.
 >
@@ -58,20 +58,20 @@ update its internal data model as these messages are received.
 ## Prometheus Endpoint
 The prometheus_plugin will have one endpoint (/metrics) to support the pull functionality. The pull endpoint will be implemented on top of nodeos http_plugin, rather than civetweb.
 Data will be exported using the prometheus text-based exposition format.
-The http endpoint for the prometheus_plugin will utilize the prometheus strand to send client updates.  The plugin will receive requests on an http thread, which will immediately post a lambda to prometheus strand.  The request will pull the
+The http endpoint for the prometheus_plugin will utilize the prometheus strand to send client updates.  The plugin will receive requests on an http thread, which will immediately post a lambda to the prometheus strand.  The request will pull the
 updated metric data from the prometheus data model and use the prometheus-cpp library to perform the serialization.  Requests will be bound by a timeout of 30ms.
 
 ## Instrumentation of plugins
 
-Each of the instrumented plugins will have a register_metrics_listener() method to register a std::function that takes a vector of runtime_metrics.  Instrumented plugins will each maintain a specialized plugin_metrics structure (see below).  The plugin will pass delegate the register_listener() method to the plugin_metrics struct. The plugin_metrics struct will manage the update cycle
+Each of the instrumented plugins will have a register_metrics_listener() method to register a std::function that takes a vector of runtime_metrics.  Instrumented plugins will each maintain a specialized plugin_metrics structure (see below).  The plugin will pass the register_listener() method to the plugin_metrics struct. The plugin_metrics struct will manage the update cycle
 to enforce a clean 'snapshot' view of all the metric data for a plugin.
 
-A plugin_metrics base class will provided for plugins to support collecting/publishing metrics to the prometheus_plugin (or potentially some other metrics publisher in the future). Each plugin will extend the base class and include runtime_metrics as members of the base class.
-Each plugin implement a virtual function metrics(), which will collect all relevant metrics and insert them into a vector for processing by the prometheus_plugin.
+A plugin_metrics base class will be provided for plugins to support collecting/publishing metrics to the prometheus_plugin (or potentially some other metrics publisher in the future). Each plugin will extend the base class and include runtime_metrics as members of the base class.
+Each plugin implements a virtual function metrics(), which will collect all relevant metrics and insert them into a vector for processing by the prometheus_plugin.
 
 The register_listener() method on plugin_metrics will be used by the prometheus plugin to register a lambda to perform the metrics update.
 The lambda will post to a strand, backed by a named_thread pool (consisting of a single thread).  The lambda posted to the strand will perform the metrics update inside the prometheus_plugin.
-Each plugin will have it's own update cycle - for instance the producer_plugin will update on each block.  The instrumented plugins will report their metrics update via the post_metrics() method on the plugin_metrics object.
+Each plugin will have its own update cycle - for instance the producer_plugin will update on each block.  The instrumented plugins will report their metrics update via the post_metrics() method on the plugin_metrics object.
 The post_metrics method will check the should_post() method to verify that it should actually update the prometheus_plugin by calling should_post().  The should_post method will check to see if there is a registered listener and verify that enough time has elapsed since
 the last post.  The default throttling will be to ensure that there is no more than one post per 250ms.
 
