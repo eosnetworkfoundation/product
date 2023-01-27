@@ -73,7 +73,7 @@ The register_listener() method on plugin_metrics will be used by the prometheus 
 The lambda will post to a strand, backed by a named_thread pool (consisting of a single thread).  The lambda posted to the strand will perform the metrics update inside the prometheus_plugin.
 Each plugin will have it's own update cycle - for instance the producer_plugin will update on each block.  The instrumented plugins will report their metrics update via the post_metrics() method on the plugin_metrics object.
 The post_metrics method will check the should_post() method to verify that it should actually update the prometheus_plugin by calling should_post().  The should_post method will check to see if there is a registered listener and verify that enough time has elapsed since
-the last post.  The default throttling will be to ensure that there is no more than one post per 250ms.
+the last post.  The default throttling will be to enforce a maximum of 4Hz (250ms between calls).  Based on settings, an update rate of up to 10Hz (100ms between calls) will be supported.
 
 ```C++
 struct plugin_metrics {
