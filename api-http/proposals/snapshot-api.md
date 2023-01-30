@@ -29,7 +29,7 @@ Following considerations/design decisions were also expressed:
 | **API URL** 	| **Purpose** 	| **Parameters** 	|
 |----------	|----------	|----------	|
 | /producer/schedule_snapshot         	| Adds a task to perform snapshot         	| start_block, end_block, block_spacing, snapshot_description     	|
-| /producer/get_snapshot_requests         	| Returns scheduled snapshot requests         	| start_snapshot_request_id, limit (number of snapshots to return)         	|
+| /producer/get_snapshot_requests         	| Returns scheduled snapshot requests         	| None         	|
 | /producer/unschedule_snapshot         	| Removes previously scheduled snapshot task         	| Snapshot ID         	|
 
 ### Scheduling Snapshot
@@ -53,7 +53,7 @@ Please note that single snapshot request can trigger and correspond to multiple 
 ![image](https://user-images.githubusercontent.com/79997103/212993658-af39ac43-ee64-4578-8d8f-4cbe16dba1da.png)
 
 ### Retrieving Snapshot Requests
-This endpoint will return all scheduled snapshot requests with pagination - starting from snapshot determined by 'start_snapshot_request_id' (optional) and returning 'limit' number of snapshots (optional as well)
+This endpoint will return all scheduled snapshot requests. Maximum amount of snapshots that can be scheduled determined by hardcoded safeguard value set at reasonable amount.
 
 For each snapshot request returned a list of associated snapshots (if any) will be returned
 
@@ -83,9 +83,8 @@ Database, probably in a form of a json file, will be used to hold snapshot sched
 
 ```json
 {
- [
+"snapshot_requests": [
     {
-         "snapshot_request_time": "2020-11-16T00:00:00.000Z",
          "snapshot_request_id": 0,
          "snapshot_description": "Example of recurring snapshot",
          "block_spacing": 100,
@@ -94,7 +93,6 @@ Database, probably in a form of a json file, will be used to hold snapshot sched
 
     },
     {
-         "snapshot_request_time": "2020-11-16T00:00:10.000Z",
          "snapshot_request_id": 1,
          "snapshot_description": "Example of one-time snapshot",
          "block_spacing": 0,
@@ -102,35 +100,11 @@ Database, probably in a form of a json file, will be used to hold snapshot sched
          "end_block_num": 5200,
 
     }
- ],
- "pending_snapshots": [
-     {
-         "head_block_id": "ABC",
-         "head_block_num": 5100,
-         "head_block_time": "2020-11-16T00:00:30.000Z",
-         "version": 6,
-         "snapshot_name": "/home/me/nodes/node-ame/snapshots/snapshot-5100-ABC.bin.pending",
-         "triggering_requests": [0]
-     },
-     {
-         "head_block_id": "DEF",
-         "head_block_num": 5100,
-         "head_block_time": "2020-11-16T00:00:31.000Z",
-         "version": 6,
-         "snapshot_name": "/home/me/nodes/node-ame/snapshots/snapshot-5100-DEF.bin.pending",
-         "triggering_requests": [0]
-     },
-     {
-         "head_block_id": "GHI",
-         "head_block_num": 5200,
-         "head_block_time": "2020-11-16T00:01:21.000Z",
-         "version": 6,
-         "snapshot_name": "/home/me/nodes/node-ame/snapshots/snapshot-5200-GHI.bin.pending",
-         "triggering_requests": [0, 1]
-     }
  ]
 }
 ```
+
+Pending snapshots related to snapshot requests should be determined by scanning snapshots directory for the files that match certain pattern (such as snapshot-5100-DEF.bin.pending for example). Block number, ID, head_block_time and version number should be retrieved from these files.
 
 Database is updated by following events:
 - New snapshot request is scheduled
@@ -146,12 +120,11 @@ Snapshot scheduling engine should be able to read this database file on startup,
 
 #### Snapshot "now", one time, asap
 ```shell
-curl http://127.0.0.1:8888/v1/producer/schedule_snapshot | json_pp
+curl -X POST http://127.0.0.1:8888/v1/producer/schedule_snapshot | json_pp
 ```
 will return:
 ```json
- {
-         "snapshot_request_time": "2020-11-16T00:00:00.000Z",
+{
          "snapshot_request_id": 0,
          "snapshot_description": "",
          "block_spacing": 0,
@@ -168,8 +141,7 @@ curl -X POST http://127.0.0.1:8888/v1/producer/schedule_snapshot
 ```
 will return:
 ```json
- {
-         "snapshot_request_time": "2020-11-16T00:00:00.000Z",
+{
          "snapshot_request_id": 0,
          "snapshot_description": "",
          "block_spacing": 1000,
@@ -186,8 +158,7 @@ curl -X POST http://127.0.0.1:8888/v1/producer/schedule_snapshot
 ```
 will return:
 ```json
- {
-         "snapshot_request_time": "2020-11-16T00:00:00.000Z",
+{
          "snapshot_request_id": 0,
          "snapshot_description": "Example of recurring snapshot",
          "block_spacing": 1000,
@@ -204,8 +175,7 @@ curl -X POST http://127.0.0.1:8888/v1/producer/schedule_snapshot
 ```
 will return:
 ```json
- {
-         "snapshot_request_time": "2020-11-16T00:00:00.000Z",
+{
          "snapshot_request_id": 0,
          "snapshot_description": "",
          "block_spacing": 0,
@@ -217,15 +187,12 @@ will return:
 #### Get snapshot requests
 ```shell
 curl -X POST http://127.0.0.1:8888/v1/producer/get_snapshot_requests
-   -H 'Content-Type: application/json'
-   -d '{"start_snapshot_request_id":"0","limit":"10"}'
 ```
 will return:
 ```json
 {
  "snapshot_requests": [
     {
-         "snapshot_request_time": "2020-11-16T00:00:00.000Z",
          "snapshot_request_id": 0,
          "snapshot_description": "Example of recurring snapshot",
          "block_spacing": 100,
@@ -251,7 +218,6 @@ will return:
         ]
     },
     {
-         "snapshot_request_time": "2020-11-16T00:00:10.000Z",
          "snapshot_request_id": 1,
          "snapshot_description": "Example of one-time snapshot",
          "block_spacing": 0,
@@ -262,7 +228,6 @@ will return:
 
     }
  ],
- "next_request_id": null
 }
 
 ```
@@ -275,8 +240,7 @@ curl -X POST http://127.0.0.1:8888/v1/producer/unschedule_snapshot
 ```
 will return:
 ```json
- {
-         "snapshot_request_time": "2020-11-16T00:00:00.000Z",
+{
          "snapshot_request_id": 1,
          "snapshot_description": "Example of recurring snapshot",
          "block_spacing": 0,
@@ -358,19 +322,7 @@ will return:
       description: Returns a list of scheduled snapshots
       operationId: get_snapshot_status
       requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                start_snapshot_request_id:
-                  type: integer
-                  description: Snapshot offset
-                limit:
-                  type: integer
-                  description: Number of snapshots to return
-
+        required: false
       responses:
         "201":
           description: OK
@@ -379,19 +331,12 @@ will return:
              schema:
                 type: object
                 properties:
-                  next_request_id:
-                    type: integer
-                    description: Next available snapshot ID
                   snapshot_requests:
                     type: array
                     description: An array of scheduled snapshots
                     items:
                       type: object
                       properties:
-                          snapshot_request_time:
-                            type: string
-                            description: Snapshot unix timestamp
-                            example: 2020-11-16T00:00:00.000
                           snapshot_request_id:
                             type: integer
                             description: Unique id identifying current snapshot request
