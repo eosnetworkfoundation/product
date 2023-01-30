@@ -321,8 +321,6 @@ will return:
       summary: get_snapshot_requests
       description: Returns a list of scheduled snapshots
       operationId: get_snapshot_status
-      requestBody:
-        required: false
       responses:
         "201":
           description: OK
