@@ -124,4 +124,4 @@ After the initial evaluation the following metrics will be added:
 * gauge - disk space in bytes used by volume (blocks, ship, state, trace)
 * gauge - disk space in bytes available
 * gauge - number of dropped blocks
- 
+* guage - number of transactions in process 
