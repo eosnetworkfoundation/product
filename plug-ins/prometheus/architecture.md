@@ -84,6 +84,9 @@ struct plugin_metrics {
 };
 ```
 
+## Configuration Items
+* Max response time in milliseconds (default 30ms)
+
 # Initial Intrumentation
 An initial phase of instrumentation will allow for the evaluation of the usability of the instrumentation when viewed from Prometheus.  The initial instrumentation will not include any per account or per contract metrics.  Additionally, the ability to expire metrics will not be included in the initial phase. To support dynamic metrics, the metric object for each plugin will include an indicator of when the set of metrics has last changed.  The following metrics will be collected for the initial phase of instrumentation:
 
