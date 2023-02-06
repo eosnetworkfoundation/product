@@ -93,6 +93,7 @@ An initial phase of instrumentation will allow for the evaluation of the usabili
 ## Net Plugin
 * gauge - number of clients
 * gauge - number of peers
+* gauge - number of dropped blocks
  
 ## Producer Plugin
 
@@ -126,5 +127,4 @@ After the initial evaluation the following metrics will be added:
 * gauge - cpu usage by thread
 * gauge - disk space in bytes used by volume (blocks, ship, state, trace)
 * gauge - disk space in bytes available
-* gauge - number of dropped blocks
 * gauge - number of transactions in process 
