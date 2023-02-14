@@ -4,7 +4,7 @@
   * wget https://github.com/prometheus/prometheus/releases/download/v2.42.0/prometheus-2.42.0.linux-amd64.tar.gz
   * tar xvzf prometeus-2.4.2.0.linux-amd64.tar.gz
 * Configure Prometheus
-  * Take not of your nodeos topology.  The endpoint for the nodeos prometheus_plugin will be on the http_plugin port at:
+  * Take note of your nodeos topology.  The endpoint for the nodeos prometheus_plugin will be on the http_plugin port at:
     /v1/prometheus/metrics. So a typical one node configuration
     will be http://127.0.0.1:8888/v1/prometheus/metrics.  If you are running via one of the test scrtips, the regression
     test scripts, the first node will run on port 8888, and each of the next will use the next port number, so 
