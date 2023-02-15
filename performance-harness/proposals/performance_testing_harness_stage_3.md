@@ -7,14 +7,6 @@ Requirements are being curated for the development of a performance testing and 
 
 ## Stage 3
 
-###   Multi-producer & "relay" or "canary" node configuration support (Carried over from Stage 2)
-    -   Add configurable network topology based on public networks
-        -   multiple producer nodes, each accessed through a dedicated relay/canary node
-        -   all relay nodes connected in mesh
-    -   Include configurable "relay" nodes
-        -   Specific configuration per node type
-    -   Expand reporting to include multiple nodes
-
 ### Work with ENF to identify additional metrics that would be useful to publish (Carried over from Stage 2)
     -   Support additional metrics that would be useful to publish
 
