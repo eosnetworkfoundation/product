@@ -18,16 +18,6 @@ Requirements are being curated for the development of a performance testing and 
 ### Work with ENF to identify additional metrics that would be useful to publish (Carried over from Stage 2)
     -   Support additional metrics that would be useful to publish
 
-### HTTP harness testing
-
--   Setup HTTP performance testing across single node
-    -   Transaction generator to be able to target the http interface
-        -   Need new http transaction provider using asynchronous requests
-    -   Support http_plugin on canary node
-    -   Performance Test Harness to be able to select which protocol to use (http vs. p2p)
-    -   Support Transfer Per Second transaction generation
-    -   Support JSON transaction generation
-
 ### Expand Transaction generator test scenarios
 
 -   EVM Transactions (Carried over from Stage 2)
@@ -46,18 +36,6 @@ Requirements are being curated for the development of a performance testing and 
     -   From consumption in nodeos
     -   From consumption from SHiP
     -   From consumption from trace_api_plugin
-
-### Create Replay Performance Test
-
--   May be separate from the current Performance Harness
-    -   Could be incorporated into reporting
-    -   Could be separate script that is run at own schedule
--   Determine where to get block log
-    -   How big or which block log to use?
-        -   Start from snapshot
-        -   Replay specific range to get interesting block activity (1, 5, 10 million blocks?)
-        -   Report time spent (from the replay)
--   Determine how frequently to run
 
 ### Reporting
 
