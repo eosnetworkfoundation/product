@@ -18,46 +18,15 @@ Requirements are being curated for the development of a performance testing and 
     -   From consumption from SHiP
     -   From consumption from trace_api_plugin
 
-### Reporting
+### Engage with ENF to plot course on the following topics
 
--   Work with ENF to create reporting template
-    -   Customize text and charts for various audiences
-    -   Produce output in multiple formats
-        -   HTML
-        -   PDF
-        -   CSV
-
-### Migrate from manual cli deployment to auto deployment
-
--   Begin Design Planning for migration to auto deployment (From Stage 2)
-    -   Work with ENF to building architectural/design doc
-    -   SPIKE: Evaluation of technologies
-    -   Recommendation for technologies to use
-
--   Begin Migration (based on outcome of planning)
-
-    -   Begin migrating to use of selected technology (i.e. Ansible and Terraform or similar)
-    -   Work with ENF to design gui
-        -   Preferred technology/language
-        -   UI/UX Design
-        -   Where to deploy
-    -   Provide barebones "gui" for changing configuration
-    -   Work with ENF to determine what configurations to run?
-    -   Work with ENF to determine how frequently to run?
-
-### Increase output evaluation statistics
-
--   Work with ENF to determine which statistics should be built into output or graphed
-    -   Graphical representation of results
-    -   Plotting of latency and other stats
-
-### Storage of historical data for comparison
-
--   Work with ENF to determine:
-    -   What data to store
-    -   Where to store data
--   Availability of data from web?
--   Github pages? GCP?
+-   Engage with ENF to identify:
+    -   Individuals at ENF to engage with
+    -   How to gather and persist data
+    -   What data to gather and persist
+    -   How to incoporate Performance Harness into CI/CD
+    -   Initial control surface (simple UI?)
+    -   Visualizations desired (tool/technology, graphs, etc.)
 
 
 
