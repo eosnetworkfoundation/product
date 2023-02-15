@@ -1,6 +1,6 @@
 # Prometheus Plugin Test Setup
 
-* Install Prometeus 
+* Install Prometheus 
   * To install packaged version on Ubuntu:
     * sudo apt-get install prometheus
     * the prometheus config file will be /etc/prometheus/prometheus.yml
