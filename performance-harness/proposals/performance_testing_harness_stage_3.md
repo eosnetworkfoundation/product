@@ -10,17 +10,6 @@ Requirements are being curated for the development of a performance testing and 
 ### Work with ENF to identify additional metrics that would be useful to publish (Carried over from Stage 2)
     -   Support additional metrics that would be useful to publish
 
-### Expand Transaction generator test scenarios
-
--   EVM Transactions (Carried over from Stage 2)
--   Large action
-    -   Large action payload (~200KB string payload) that is not used
--   DB intense actions
-    -   Lots of reads with no writes
-    -   Lots of writes with no reads
-    -   Mix of reads/writes
--   Kitchen Sink (mix of all transaction types)?
-
 ### Additional Latency Measuremeants
 
 -   Measure latency:
