@@ -7,16 +7,6 @@ Requirements are being curated for the development of a performance testing and 
 
 ## Stage 3
 
-### Work with ENF to identify additional metrics that would be useful to publish (Carried over from Stage 2)
-    -   Support additional metrics that would be useful to publish
-
-### Additional Latency Measuremeants
-
--   Measure latency:
-    -   From creation
-    -   From consumption in nodeos
-    -   From consumption from SHiP
-    -   From consumption from trace_api_plugin
 
 ### Engage with ENF to plot course on the following topics
 
