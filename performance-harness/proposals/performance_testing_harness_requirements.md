@@ -70,8 +70,8 @@ Additional requirements may be proposed for inclusion in ongoing or future stage
         [*EOS Mechanics Github*](https://github.com/AlohaEOS/eos-mechanics)
 -   Contract testing scenarios:
     -   Run on empty state
-    -   Run on large backlog
-    -   Run with backlog pruning
+    -   Run on large block log
+    -   Run with block log pruning
     -   Run with SHiP enabled
     -   Run with trace_api_plugin
 -   Run on different states:
