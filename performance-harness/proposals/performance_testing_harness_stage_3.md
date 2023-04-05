@@ -1,11 +1,11 @@
-# Performance Testing Harness Stage 3 Planning
+# Performance Testing Harness Phase 3 Planning
 
-Roadmap for the development of a **Performance Testing Harness** -- Stage 3.
+Roadmap for the development of a **Performance Testing Harness** -- Phase 3.
 
 Requirements are being curated for the development of a performance testing and evaluation harness here: [Performance Testing Harness Requirements & Planning & Staging](https://github.com/eosnetworkfoundation/product/tree/main/performance-harness/proposals)
 
 
-## Stage 3
+## Phase 3
 
 ### Operational Modes
 

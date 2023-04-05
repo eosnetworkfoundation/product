@@ -1,6 +1,6 @@
 # Performance Testing Harness Delivery Staging
 
-Staged roadmap for the development of a **Performance Testing Harness**.
+Phased roadmap for the development of a **Performance Testing Harness**.
 
 Requirements are being curated for the development of a performance testing and evaluation harness here: [Performance Testing Harness Requirements](https://github.com/eosnetworkfoundation/product/tree/main/performance-harness/proposals)
 
@@ -60,7 +60,7 @@ Requirements are being curated for the development of a performance testing and 
     -   access/intepret results
     -   describe what is available
 
-## Stage 2
+## Phase 2
 
 
 ### Expand Transaction generator
@@ -92,7 +92,7 @@ Requirements are being curated for the development of a performance testing and 
 -   Evaluation of technologies
 -   Recommendation for technologies to use
 
-## Stage 3
+## Phase 3
 
 
 ### HTTP harness testing
@@ -119,7 +119,7 @@ Requirements are being curated for the development of a performance testing and 
 -   Github pages? GCP?
 
 
-## Additional Planned Development (To Prioritize and Stage)
+## Additional Planned Development (To prioritize and work into later phases)
 
 -   Cloud infrastructure support
     -   Ease of deployment/teardown

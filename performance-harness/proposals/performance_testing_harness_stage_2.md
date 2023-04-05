@@ -1,11 +1,11 @@
-# Performance Testing Harness Stage 2 Planning
+# Performance Testing Harness Phase 2 Planning
 
-Roadmap for the development of a **Performance Testing Harness** -- Stage 2.
+Roadmap for the development of a **Performance Testing Harness** -- Phase 2.
 
 Requirements are being curated for the development of a performance testing and evaluation harness here: [Performance Testing Harness Requirements](https://github.com/eosnetworkfoundation/product/tree/main/performance-harness/proposals)
 
 
-## Stage 2
+## Phase 2
 
 
 ### Expand Transaction generator
