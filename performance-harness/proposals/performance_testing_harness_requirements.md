@@ -1,6 +1,6 @@
 # Performance Testing Harness Requirements
 
-Gathering requirements for a performance testing and evaluation harness.  Requirements will be evaluated, prioritized, and staged into the [*Performance Testing Harness Delivery Staging*](https://github.com/eosnetworkfoundation/product/tree/main/performance-harness/proposals) document.
+Gathering requirements for a performance testing and evaluation harness.  Requirements will be evaluated, prioritized, and phased into the [*Performance Testing Harness Delivery Phasing*](https://github.com/eosnetworkfoundation/product/tree/main/performance-harness/proposals) document.
 
 Additional requirements may be proposed for inclusion in ongoing or future phases.
 
