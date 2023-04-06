@@ -1,8 +1,9 @@
 # Proposal for Nodeos Endpoint IP and Port Configuration
-This is a proposal to address [IS #965](https://github.com/AntelopeIO/leap/issues/965)
+This is a proposal to allow setting the IP and port for each endpoint provided by nodeos independently, i.e. address [IS #965](https://github.com/AntelopeIO/leap/issues/965).
 ## API category classification
 
-All APIs are organized in the following catagories so they can be independently configured with different server addresses
+Although [IS #965](https://github.com/AntelopeIO/leap/issues/965) mentioned the *endpoint* as the unit of address configuration; however, if we allow each endpoint to be configurable, it
+would be too finer grained and verbose to use. Yet we feel the granularity is on the plugin level might not meet the user expectation. Therefore, we introduce a category level as the unit of server address configuration. The following are our proposed category classification.
 
 ### get_info
   - v1/chain/get_info
