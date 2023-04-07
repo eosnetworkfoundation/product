@@ -29,7 +29,6 @@ would be too fine-grained and verbose to use. Yet we feel that granularity at th
   - v1/chain/get_required_keys
   - v1/chain/get_transaction_id
   - v1/chain/send_read_only_transaction
-  - v1/chain/compute_transaction
   - v1/chain/get_accounts_by_authorizers
   - v1/chain/get_raw_block
   - v1/chain/get_block
@@ -37,6 +36,7 @@ would be too fine-grained and verbose to use. Yet we feel that granularity at th
   - v1/chain/get_transaction_status
 
 ### chain_rw
+  - v1/chain/compute_transaction
   - v1/chain/push_transaction
   - v1/chain/push_transactions
   - v1/chain/send_transaction
@@ -59,8 +59,6 @@ would be too fine-grained and verbose to use. Yet we feel that granularity at th
   - v1/producer/get_supported_protocol_features
   - v1/producer/get_account_ram_corrections
   - v1/producer/get_unapplied_transactions
-  - v1/producer/get_snapshot_requests
-  - v1/producer/get_integrity_hash
 
 ### producer_rw
   - v1/producer/pause
@@ -70,8 +68,10 @@ would be too fine-grained and verbose to use. Yet we feel that granularity at th
   - v1/producer/remove_greylist_accounts
   - v1/producer/set_whitelist_blacklist
   - v1/producer/schedule_protocol_feature_activations
+  - v1/producer/get_integrity_hash
 
 ### snapshot
+  - v1/producer/get_snapshot_requests
   - v1/producer/create_snapshot
   - v1/producer/schedule_snapshot
   - v1/producer/unschedule_snapshot
@@ -79,22 +79,6 @@ would be too fine-grained and verbose to use. Yet we feel that granularity at th
 ### trace_api
   - v1/trace_api/get_block
   - v1/trace_api/get_transaction_trace
-
-### wallet
-  - v1/wallet_mgr/set_timeout
-  - v1/wallet_mgr/sign_transaction
-  - v1/wallet_mgr/sign_digest
-  - v1/wallet_mgr/create
-  - v1/wallet_mgr/open
-  - v1/wallet_mgr/lock_all
-  - v1/wallet_mgr/lock
-  - v1/wallet_mgr/unlock
-  - v1/wallet_mgr/import_key
-  - v1/wallet_mgr/remove_key
-  - v1/wallet_mgr/create_key
-  - v1/wallet_mgr/list_wallets
-  - v1/wallet_mgr/list_keys
-  - v1/wallet_mgr/get_public_keys
 
 ### prometheus
   - v1/prometheus/metrics
@@ -169,7 +153,6 @@ It will be converted as follows in this proposal
      producer_rw,
      snapshot,
      trace_api,
-     wallet,
      prometheus,
    };
 
