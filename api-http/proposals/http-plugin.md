@@ -2,8 +2,8 @@
 This is a proposal to allow setting the IP and port for each endpoint provided by nodeos independently, i.e. address [IS #965](https://github.com/AntelopeIO/leap/issues/965).
 ## API category classification
 
-Although [IS #965](https://github.com/AntelopeIO/leap/issues/965) mentioned the *endpoint* as the unit of address configuration; however, if we allow each endpoint to be configurable, it
-would be too finer grained and verbose to use. Yet we feel the granularity is on the plugin level might not meet the user expectation. Therefore, we introduce a category level as the unit of server address configuration. The following are our proposed category classification.
+Although [IS #965] (https://github.com/AntelopeIO/leap/issues/965) mentioned the *endpoint* as the unit of address configuration, if we allow each endpoint to be configurable, it
+would be too fine-grained and verbose to use. Yet we feel the granularity at the plugin level might not meet user expectations. Therefore, we introduce a category level as the unit of server address configuration. The following are our proposed category classifications.
 
 ### get_info
   - v1/chain/get_info
@@ -120,10 +120,9 @@ http-category-address = trace_api,                               # disable
 
 The corresponding environment variables to configure the addresses will be something like HTTP_CATEGORY_SERVER_CHAIN_RO, HTTP_CATEGORY_SERVER_NET_RO
 
-For backward compatibility, the default addresses would be "http-server-address" for all catagories which are not explicitly configured.
+For backward compatibility, the default addresses would be "http-server-address" for all categories that are not explicitly configured.
 
-All existing configuration options in http plugin apply to all handlers for all address; this include `http-threads` option. This means all handlers share the same thread pool.
-
+All existing configuration options in the http plugin apply to all handlers for all addresses; this includes the http-threads` option. This means all handlers share the same thread pool.
 
 ## API registration from other plugins
 
@@ -192,12 +191,12 @@ It will be converted as follows in this proposal
 
 ## server address format
 * server address can be in one of the following format
-  - ipv4_address:port
-  - ipv6_address:port
-  - hostname:port
+  - ipv4_address:port like 127.0.0.1:8080
+  - ipv6_address:port like [2001:db8:3c4d:15::1a2f:1a2b]:8080
+  - hostname:port like my.domain.com:8080
   - unix socket path (must starts with '/' or './')
   - http-server-address
 
-* In the case of hostname, the IP address is resolved by ARP, *ALL* resolved address will be listened.
-* Whether an IPv4-mapped IPv6 address can be used to handle both IPv4 connections and IPv6 connections is determined by system configuration. Some tool like Apache server has the option `-—enable-v4-mapped` to change the behavior, should we do the same?
-* To listen to all interfaces, just use 0.0.0.0:8008 or [::1]:8080, alternative syntax just adds unnecessary complexity.
+* In the case of the hostname, the IP address is resolved by ARP, *ALL* resolved addresses will be listened.
+* Whether an IPv4-mapped IPv6 address can be used to handle both IPv4 connections and IPv6 connections is determined by system configuration. Some tools, like Apache server, have the option `-—enable-v4-mapped` to change the behavior, should we do the same?
+* To listen to all interfaces, just use 0.0.0.0:8008 or [::1]:8080; alternative syntax just adds unnecessary complexity.
