@@ -23,6 +23,8 @@ Chain APIs can be classified into reads and writes.
 
 Chain APIs are received on the HTTP thread, processed on the main thread (and producer thread for non-get requests), and responses are sent on the HTTP thread.
 
+Note: `push_transaction`, `push_transactions`, `send_transaction`, `send_transaction2`, and `compute_transaction` recover the keys in a thread-safe thread pool until they are post to for processing. During the key recovery phase they are safe to read-only trx, and safe to run in parallel .
+
 | API                             | priority    |  Global data modified                       | Safe to read-only trx? | Safe to run in parallel? |
 |---------------------------------|-------------|---------------------------------------------|------------------------|--------------------------|
 | get_info                        | medium_high | none                                        | yes                    | yes                      |
@@ -51,12 +53,12 @@ Chain APIs are received on the HTTP thread, processed on the main thread (and pr
 | get_accounts_by_authorizers     | medium_low  | none                                        | yes                    | yes                      |
 | get_transaction_status          | medium_low  | none                                        | yes                    | yes                      |
 | send_read_only_transaction      | low         | none                                        | yes                    | yes                      |
-| compute_transaction             | low         | main thread: temporally change chainbase             | no            | no                       |
-| push_block                      | medium_low  | main thread: chainbase, forkdb, producer, controller | no            | no                       |
-| push_transaction                | low         | main thread: chainbase, forkdb, producer, controller | no            | no                       |
-| push_transactions               | low         | main thread: chainbase, forkdb, producer, controller | no            | no                       |
-| send_transaction                | low         | main thread: chainbase, forkdb, producer, controller | no            | no                       |
-| send_transaction2               | low         | main thread: chainbase, forkdb, producer, controller | no            | no                       |
+| compute_transaction             | low         | see note above                              | no                     | no                       |
+| push_block                      | medium_low  | see note above                              | no                     | no                       |
+| push_transaction                | low         | see note above                              | no                     | no                       |
+| push_transactions               | low         | see note above                              | no                     | no                       |
+| send_transaction                | low         | see note above                              | no                     | no                       |
+| send_transaction2               | low         | see note above                              | no                     | no                       |
 
 
 ### Producer APIs
@@ -67,7 +69,7 @@ They are received on the HTTP thread, processed on the main thread, and response
 | pause                                      | medium_high |                              | yes                    | no                       |
 | resume                                     | medium_high | calls abort_block() and schedule_production_loop()  | no  | no                   |
 | paused                                     | medium_high |                              | yes                    | yes                      |
-| get_runtime_options                        | medium_high |                              | yes                    |
+| get_runtime_options                        | medium_high |                              | yes                    | yes
 | update_runtime_options                     | medium_high | main thread: producer plugin and controller configs | no (configs used by trx processing| no |
 | add_greylist_accounts                      | medium_high | main thread: controller resource_greylist  | no       | no                       |
 | remove_greylist_accounts                   | medium_high | main thread: controller resource_greylist  | no       | no                       |
@@ -86,22 +88,22 @@ They are received on the HTTP thread, processed on the main thread, and response
 | get_unapplied_transactions                 | medium_high |                              | yes                    | yes                      |
 
 ### Net APIs
-Net APIs do modify state but do not modify the state accessible to read-only transaction execution. They are received on the HTTP thread, processed on the main thread, and responses are sent on the HTTP thread.
+Net APIs do modify state but do not modify the state accessible to read-only transaction execution. They are received on the HTTP thread, processed on the main thread, and responses are sent on the HTTP thread. Connect and disconnect are protected by mutexes and can run in parallel from any thread.
 
 | API                         | priority    | Global data modified           | Safe to read-only trx? | Safe to run in parallel? |
 |-----------------------------|-------------|--------------------------------|------------------------|--------------------------|
-| connect                     | medium_high | main thread: net::connections  | yes                    | no                       |
-| disconnect                  | medium_high | main thread: net::connections  | yes                    | no                       |
+| connect                     | medium_high | main thread: net::connections  | yes                    | yes                      |
+| disconnect                  | medium_high | main thread: net::connections  | yes                    | yes                      |
 | status                      | medium_high | none                           | yes                    | yes                      |
 | connections                 | medium_high | none                           | yes                    | yes                      |
 
 
 ### Trace APIs
-Trace APIs do not go through main thread. They are executed only in http thread.
+Trace APIs do not go through main thread. They are executed only in http thread and safe to run in parallel.
 | API                         | priority |  Global data modified  | Safe to read-only trx? | Safe to run in parallel? |
 |-----------------------------|----------|------------------------|------------------------|--------------------------|
-| get_block                   | NA       | none                   | yes                    |
-| get_transaction_trace       | NA       | none                   | yes                    |
+| get_block                   | NA       | none                   | yes                    | yes
+| get_transaction_trace       | NA       | none                   | yes                    | yes
 
 ### DB Size API
 | API                         | priority   |  Global data modified  | read-only thread safe  | Safe to run in parallel? |
