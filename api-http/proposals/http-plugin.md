@@ -5,9 +5,6 @@ This is a proposal to allow setting the IP and port for each endpoint provided b
 Although [IS #965] (https://github.com/AntelopeIO/leap/issues/965) mentioned the *endpoint* as the unit of address configuration, if we allow each endpoint to be configurable, it
 would be too fine-grained and verbose to use. Yet we feel that granularity at the plugin level might not meet user expectations. Therefore, we introduce a category level as the unit of server address configuration. The following are our proposed category classifications.
 
-### get_info
-  - v1/chain/get_info
-
 ### chain_ro
   - v1/chain/get_activated_protocol_features
   - v1/chain/get_block_info
@@ -42,6 +39,8 @@ would be too fine-grained and verbose to use. Yet we feel that granularity at th
   - v1/chain/send_transaction
   - v1/chain/send_transaction2
 
+### db_size
+  - v1/db_size/get
 ### net_ro
   - v1/net/status
   - v1/net/connections
@@ -85,6 +84,7 @@ would be too fine-grained and verbose to use. Yet we feel that granularity at th
 
 ### node
   - v1/node/get_supported_apis
+  - v1/chain/get_info
 
 ## User configuration knob
 A single `http-category-address` can be used to configure all addresses in command line and ini file. The option can be used multiple times as needed.
