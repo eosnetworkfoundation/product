@@ -23,112 +23,117 @@ Chain APIs can be classified into reads and writes.
 
 Chain APIs are received on the HTTP thread, processed on the main thread (and producer thread for non-get requests), and responses are sent on the HTTP thread.
 
-| API                             | priority    |  Global data modified                                | Safe to read-only trx? |
-|---------------------------------|-------------|------------------------------------------------------|------------------------|
-| get_info                        | medium_high | none                                                 | yes                    |
-| get_activated_protocol_features | medium_low  | none                                                 | yes                    |
-| get_block                       | medium_low  | none                                                 | yes                    |
-| get_block_info                  | medium_low  | none                                                 | yes                    |
-| get_block_header_state          | medium_low  | none                                                 | yes                    |
-| get_account                     | medium_low  | none                                                 | yes                    |
-| get_code                        | medium_low  | none                                                 | yes                    |
-| get_code_hash                   | medium_low  | none                                                 | yes                    |
-| get_abi                         | medium_low  | none                                                 | yes                    |
-| get_raw_code_and_abi            | medium_low  | none                                                 | yes                    |
-| get_raw_abi                     | medium_low  | none                                                 | yes                    |
-| get_table_rows                  | medium_low  | none                                                 | yes                    |
-| get_table_by_scope              | medium_low  | none                                                 | yes                    |
-| get_currency_balance            | medium_low  | none                                                 | yes                    |
-| get_currency_stats              | medium_low  | none                                                 | yes                    |
-| get_producers                   | medium_low  | none                                                 | yes                    |
-| get_producer_schedule           | medium_low  | none                                                 | yes                    |
-| get_scheduled_transactions      | medium_low  | none                                                 | yes                    |
-| abi_json_to_bin                 | medium_low  | none                                                 | yes                    |
-| abi_bin_to_json                 | medium_low  | none                                                 | yes                    |
-| get_required_keys               | medium_low  | none                                                 | yes                    |
-| get_transaction_id              | medium_low  | none                                                 | yes                    |
-| get_consensus_parameters        | medium_low  | none                                                 | yes                    |
-| get_accounts_by_authorizers     | medium_low  | none                                                 | yes                    |
-| get_transaction_status          | medium_low  | none                                                 | yes                    |
-| send_read_only_transaction      | low         | none                                                 | yes                    |
-| compute_transaction             | low         | main thread: temporally change chainbase             | no                     |
-| push_block                      | medium_low  | main thread: chainbase, forkdb, producer, controller | no                     |
-| push_transaction                | low         | main thread: chainbase, forkdb, producer, controller | no                     |
-| push_transactions               | low         | main thread: chainbase, forkdb, producer, controller | no                     |
-| send_transaction                | low         | main thread: chainbase, forkdb, producer, controller | no                     |
-| send_transaction2               | low         | main thread: chainbase, forkdb, producer, controller | no                     |
+Note: `push_transaction`, `push_transactions`, `send_transaction`, `send_transaction2`, and `compute_transaction` recover the keys in a thread-safe thread pool until they are post to for processing. During the key recovery phase they are safe to read-only trx, and safe to run in parallel .
+
+| API                             | priority    |  Global data modified                       | Safe to read-only trx? | Safe to run in parallel? |
+|---------------------------------|-------------|---------------------------------------------|------------------------|--------------------------|
+| get_info                        | medium_high | none                                        | yes                    | yes                      |
+| get_activated_protocol_features | medium_low  | none                                        | yes                    | yes                      |
+| get_block                       | medium_low  | none                                        | yes                    | yes                      |
+| get_block_info                  | medium_low  | none                                        | yes                    | yes                      |
+| get_block_header_state          | medium_low  | none                                        | yes                    | yes                      |
+| get_account                     | medium_low  | none                                        | yes                    | yes                      |
+| get_code                        | medium_low  | none                                        | yes                    | yes                      |
+| get_code_hash                   | medium_low  | none                                        | yes                    | yes                      |
+| get_abi                         | medium_low  | none                                        | yes                    | yes                      |
+| get_raw_code_and_abi            | medium_low  | none                                        | yes                    | yes                      |
+| get_raw_abi                     | medium_low  | none                                        | yes                    | yes                      |
+| get_table_rows                  | medium_low  | none                                        | yes                    | yes                      |
+| get_table_by_scope              | medium_low  | none                                        | yes                    | yes                      |
+| get_currency_balance            | medium_low  | none                                        | yes                    | yes                      |
+| get_currency_stats              | medium_low  | none                                        | yes                    | yes                      |
+| get_producers                   | medium_low  | none                                        | yes                    | yes                      |
+| get_producer_schedule           | medium_low  | none                                        | yes                    | yes                      |
+| get_scheduled_transactions      | medium_low  | none                                        | yes                    | yes                      |
+| abi_json_to_bin                 | medium_low  | none                                        | yes                    | yes                      |
+| abi_bin_to_json                 | medium_low  | none                                        | yes                    | yes                      |
+| get_required_keys               | medium_low  | none                                        | yes                    | yes                      |
+| get_transaction_id              | medium_low  | none                                        | yes                    | yes                      |
+| get_consensus_parameters        | medium_low  | none                                        | yes                    | yes                      |
+| get_accounts_by_authorizers     | medium_low  | none                                        | yes                    | yes                      |
+| get_transaction_status          | medium_low  | none                                        | yes                    | yes                      |
+| send_read_only_transaction      | low         | none                                        | yes                    | yes                      |
+| compute_transaction             | low         | see note above                              | no                     | no                       |
+| push_block                      | medium_low  | see note above                              | no                     | no                       |
+| push_transaction                | low         | see note above                              | no                     | no                       |
+| push_transactions               | low         | see note above                              | no                     | no                       |
+| send_transaction                | low         | see note above                              | no                     | no                       |
+| send_transaction2               | low         | see note above                              | no                     | no                       |
 
 
 ### Producer APIs
 They are received on the HTTP thread, processed on the main thread, and responses are sent on the HTTP thread.
 
-| API                                        | priority    |  Global data modified        | Safe to read-only trx? |
-|--------------------------------------------|-------------|------------------------------|------------------------|
-| pause                                      | medium_high | main thread: producer's \_pause_production  | yes     |
-| resume                                     | medium_high | main thread: producer's \_pause_production  | yes     |
-| paused                                     | medium_high |                              | yes                    |
-| get_runtime_options                        | medium_high |                              | yes                    |
-| update_runtime_options                     | medium_high | main thread: producer plugin and controller configs | no (configs used by trx processing|
-| add_greylist_accounts                      | medium_high | main thread: controller resource_greylist  | yes (not used in read-only trx handling. only used by max_bandwidth_billed_accounts_can_pay) |
-| remove_greylist_accounts                   | medium_high | main thread: controller resource_greylist | yes       |
-| get_greylist                               | medium_high |                              | yes                    |
-| get_whitelist_blacklist                    | medium_high |                              | yes                    |
-| set_whitelist_blacklist                    | medium_high | main thread:controller blacklist, whitelist|  no      |
-| get_integrity_hash                         | medium_high |                              | yes                    |
-| create_snapshot                            | medium_high |                              | yes                    |
-| get_scheduled_protocol_feature_activations | medium_high |                              | yes                    |
-| schedule_protocol_feature_activations      | medium_high |                              | no                     |
-| get_supported_protocol_features            | medium_high |                              | yes                    |
-| get_account_ram_corrections                | medium_high |                              | yes                    |
-| get_unapplied_transactions                 | medium_high |                              | yes                    |
+| API                                        | priority    |  Global data modified        | Safe to read-only trx? | Safe to run in parallel? |
+|--------------------------------------------|-------------|------------------------------|------------------------|--------------------------|
+| pause                                      | medium_high |                              | yes                    | no                       |
+| resume                                     | medium_high | calls abort_block() and schedule_production_loop()  | no  | no                   |
+| paused                                     | medium_high |                              | yes                    | yes                      |
+| get_runtime_options                        | medium_high |                              | yes                    | yes
+| update_runtime_options                     | medium_high | main thread: producer plugin and controller configs | no (configs used by trx processing| no |
+| add_greylist_accounts                      | medium_high | main thread: controller resource_greylist  | no       | no                       |
+| remove_greylist_accounts                   | medium_high | main thread: controller resource_greylist  | no       | no                       |
+| get_greylist                               | medium_high |                              | yes                    | yes                      |
+| get_whitelist_blacklist                    | medium_high |                              | yes                    | yes                      |
+| set_whitelist_blacklist                    | medium_high | main thread:controller blacklist, whitelist|  no      | no                       |
+| get_integrity_hash                         | medium_high | calls abort_block() and schedule_production_loop() | no | no                     |
+| create_snapshot                            | medium_high | calls abort_block() and schedule_production_loop() | no | no                     |
+| schedule_snapshot                          | medium_high | snapshot_request_information | yes                    | no                       |
+| get_snapshot_requests                      | medium_high |                              | yes                    | yes                      |
+| unschedule_snapshot                        | medium_high | snapshot_request_information | yes                    | no                       |
+| get_scheduled_protocol_feature_activations | medium_high |                              | yes                    | yes                      |
+| schedule_protocol_feature_activations      | medium_high |                              | no                     | no                       |
+| get_supported_protocol_features            | medium_high |                              | yes                    | yes                      |
+| get_account_ram_corrections                | medium_high |                              | yes                    | yes                      |
+| get_unapplied_transactions                 | medium_high |                              | yes                    | yes                      |
 
 ### Net APIs
-Net APIs do modify state but do not modify the state accessible to read-only transaction execution. They are received on the HTTP thread, processed on the main thread, and responses are sent on the HTTP thread.
+Net APIs do modify state but do not modify the state accessible to read-only transaction execution. They are received on the HTTP thread, processed on the main thread, and responses are sent on the HTTP thread. Connect and disconnect are protected by mutexes and can run in parallel from any thread.
 
-| API                         | priority    | Global data modified           | Safe to read-only trx? |
-|-----------------------------|-------------|--------------------------------|------------------------|
-| connect                     | medium_high | main thread: net::connections  | yes                    |
-| disconnect                  | medium_high | main thread: net::connections  | yes                    |
-| status                      | medium_high | none                           | yes                    |
-| connections                 | medium_high | none                           | yes                    |
+| API                         | priority    | Global data modified           | Safe to read-only trx? | Safe to run in parallel? |
+|-----------------------------|-------------|--------------------------------|------------------------|--------------------------|
+| connect                     | medium_high | main thread: net::connections  | yes                    | yes                      |
+| disconnect                  | medium_high | main thread: net::connections  | yes                    | yes                      |
+| status                      | medium_high | none                           | yes                    | yes                      |
+| connections                 | medium_high | none                           | yes                    | yes                      |
 
 
 ### Trace APIs
-Trace APIs do not go through main thread. They are executed only in http thread.
-| API                         | priority |  Global data modified  | Safe to read-only trx? |
-|-----------------------------|----------|------------------------|------------------------|
-| get_block                   | NA       | none                   | yes                    |
-| get_transaction_trace       | NA       | none                   | yes                    |
+Trace APIs do not go through main thread. They are executed only in http thread and safe to run in parallel.
+| API                         | priority |  Global data modified  | Safe to read-only trx? | Safe to run in parallel? |
+|-----------------------------|----------|------------------------|------------------------|--------------------------|
+| get_block                   | NA       | none                   | yes                    | yes
+| get_transaction_trace       | NA       | none                   | yes                    | yes
 
 ### DB Size API
-| API                         | priority   |  Global data modified  | read-only thread safe  |
-|-----------------------------|------------|------------------------|------------------------|
-| get                         | medium_low |  none                  | yes                    |            
-
+| API                         | priority   |  Global data modified  | read-only thread safe  | Safe to run in parallel? |
+|-----------------------------|------------|------------------------|------------------------|--------------------------|
+| get                         | medium_low |  none                  | yes                    | yes                      |            
+ 
 ### Net Messages
 Net messages can be classified into sync and non-sync:
 - Non-sync messages do not modify states.
 - Sync messages are signed_block, packed_transaction. They may modify states.
 
-| Message            | priority | Global data modified            | threads involved            | Safe to read-only trx?  |
-|--------------------|----------|---------------------------------|-----------------------------|-------------------------| 
-| handshake          | medium   | none                            | net, main (handshake check) | yes                     |
-| go_away            | NA       | none                            | net                         | yes                     |
-| time               | NA       | none                            | net                         | yes                     |
-| notice             | NA       | none                            | net                         | yes                     |
-| request            | medium   | none                            | net, main (controller::fetch_block_by_id()) | yes     |
-| sync_request       | medium   | none                            | net, main (controller::fetch_block_by_number()) | yes |
-| packed_transaction | low      | chainbase, forkdb, producer, net, controller | net, producer, main | no                 |
-| signed_block       | medium   | chainbase, forkdb, producer, net, controller | net, producer, main | no                 |
+| Message            | priority | Global data modified            | threads involved            | Safe to read-only trx?  | Safe to run in parallel |
+|--------------------|----------|---------------------------------|-----------------------------|-------------------------|-------------------------| 
+| handshake          | medium   | none                            | net, main (handshake check) | yes                     | yes                     |
+| go_away            | NA       | none                            | net                         | yes                     | yes                     |
+| time               | NA       | none                            | net                         | yes                     | yes                     |
+| notice             | NA       | none                            | net                         | yes                     | yes                     |
+| request            | medium   | none                            | net, main (controller::fetch_block_by_id()) | yes     | yes                     |
+| sync_request       | medium   | none                            | net, main (controller::fetch_block_by_number()) | yes | yes                     |
+| packed_transaction | low      | chainbase, forkdb, producer, net, controller | net, producer, main | no                 | no                      |
+| signed_block       | medium   | chainbase, forkdb, producer, net, controller | net, producer, main | no                 | no                      |
 
 ### SHiP
 SHiP receives blockchain state data, saves it to files, and sends data to nodes who request it.
 
-| Request                | priority |  Data modified       | Safe to read-only trx? |
-|------------------------|----------|----------------------|------------------------|
-| get_status_request     | medium   | internal             | yes                    |
-| get_blocks_request     | medium   | internal             | yes                    |
-| get_blocks_ack_request | medium   | internal             | yes                    |
+| Request                | priority |  Data modified       | Safe to read-only trx? | Safe to run in parallel? |
+|------------------------|----------|----------------------|------------------------|--------------------------|
+| get_status_request     | medium   | internal             | yes                    | yes                      |
+| get_blocks_request     | medium   | internal             | yes                    | yes                      |
+| get_blocks_ack_request | medium   | internal             | yes                    | yes                      |
 
 ## Design Decisions
 
@@ -154,16 +159,16 @@ In `write window`, operations in `write operation queue` and `read operation que
 
 In `read window`, operations only in `read operation queue` are executed by the main thread, and transactions in `read-only transaction queue` are executed under the restrictive context of read-only transactions in parallel within the read-only threads.
 - At the start of `read window`, all threads in the pool are signaled to start processing read-only transactions. Each thread enters a loop of pulling one transaction a time from the front of the read-only transaction queue and executing it. New incoming read-only transactions are placed at the back of the queue. The queue is protected by mutex.
-- If less than 5% (hardcoded for now) of `read-only-read-window-time-us` time remains in the `read window`, a thread will stop scheduling new transaction for execution and exit the execution loop.
+- If less than `10ms` (hardcoded for now) of `read-only-read-window-time-us` time remains in the `read window`, a thread will stop scheduling new transaction for execution and exit the execution loop.
 - At the end of the window, unfinished transactions are put to the front of the `read-only transaction queue` (a deque) so that they can be executed the first in the next round. For implementation simplicity and execution efficiency, the original order of unfinished transactions is not preserved. Unfinished transactions are likely to have been scheduled in a close range of time period and they are all read-only. Their execution order might not matter much.
-- A transaction exceeding wall-clock deadline for read-only transactions will be discarded and a proper response will be sent back. The wall-clock deadline for a read-only transaction is calculated by adding a duration (in microseconds) to the start time of its execution. The duration value will initially be set to the lesser of `read-only-write-read-window-time-us * 95 / 100` and the existing `max-transaction-time * 1000`. Note that the 95 in the formula is assuming the 5% hardcoded value for when to stop scheduling new transactions in the execution window. The code will only have one source of truth for that hardcoded 5% number and compute the other derived numbers appropriately to remain consistent.
+- A transaction exceeding wall-clock deadline for read-only transactions will be discarded and a proper response will be sent back. The wall-clock deadline for a read-only transaction is calculated by adding a duration (in microseconds) to the start time of its execution. The duration value will initially be set to the lesser of `read-only-write-read-window-time-us - 10000` and the existing `max-transaction-time * 1000`.
 - Before a transaction is selected for execution, it is desirable to check if the HTTP connection is still up. If not, simply discard the transaction. A warning log or a stats should be generated so the node operator can adjust the configuration options or take any other actions like throttling read-only transactions.
 
 
 ### Window Toggling
  
 - From `write window` to `read window`: at the end of the `write window` and read-only transaction queue not empty.
-- From `read window` to `write window`: when read-only transaction queue is empty; or at the end of `read window`.
+- From `read window` to `write window`: when read-only transaction queue is empty, at the end of `read window`, or net_plugin has received a new block.
 
 In the following state diagram, `write_window_deadline = time when write window starts + write-window-time`, and `read_window_deadline = time when read window starts + read-window-time`
 
@@ -175,7 +180,7 @@ flowchart TD
     C -->|yes| A
     C -->|no| R(((read window)))
     
-    R -->|read-only trx executed| S[read-only trx queue empty agreed by all the threads?]
+    R -->|read-only trx executed| S[read-only trx queue empty agreed by all the threads, new block received, or less than 10ms left in read window?]
     S -->|yes| A
     S -->|no| R
     R -->|timer progressing| T[read_window_deadline passed?]
