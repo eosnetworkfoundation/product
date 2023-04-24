@@ -90,7 +90,7 @@ would be too fine-grained and verbose to use. Yet we feel that granularity at th
 A single `http-category-address` can be used to configure all addresses in command line and ini file. The option can be used multiple times as needed.
 
 ```config.ini
-http-server-address   = 0.0.0.0:8080
+http-server-address   = http-category-address
 http-category-address = chain_ro,127.0.0.1:8081
 http-category-address = chain_ro,localhost:9090
 http-category-address = chain_rw,[::1]:8082
@@ -98,14 +98,14 @@ http-category-address = net_ro,[::1]:8081
 http-category-address = producer_ro,/tmp/absolute_unix_path.sock
 http-category-address = wallet,./relative/unix_path.sock
 http-category-address = snapshot_rw,./relative/unix_path.sock
-http-category-address = get_info,http-server-address             # means 0.0.0.0:8080
 http-category-address = trace_api,                               # disable
 ````
+For the node category, it is NOT user configurable because it will be available for all listened http addresses.
 
-The corresponding environment variables to configure the addresses will be something like `HTTP_CATEGORY_SERVER_CHAIN_RO`, `HTTP_CATEGORY_SERVER_NET_RO`.
+For backward compatibility, the HTTP category facility has to be opted in by specifying `http-server-address = http-category-address` explicitly. 
+When `http-server-address = http-category-address`, all the unspecified categories are considered disabled.  In addition, `http-server-address = http-category-address`
+connot be specified together with a non-empty `unix-socket-path`. 
 
-For backward compatibility, the default addresses would be "http-server-address" for all categories except `node` that are not explicitly configured. For `node` category, it would be available
-for all listened addresses. Furthermore, we don't suggest the node category to be user configurable.
 
 All existing configuration options in the http plugin apply to all handlers for all addresses; this includes the `http-threads` option. This means all handlers share the same thread pool.
 
@@ -179,8 +179,7 @@ It will be converted as follows in this proposal
   - ipv6_address:port like [2001:db8:3c4d:15::1a2f:1a2b]:8080
   - hostname:port like my.domain.com:8080
   - unix socket path (must starts with '/' or './')
-  - http-server-address
 
 * In the case of the hostname, the IP address is resolved by ARP, *ALL* resolved addresses will be listened to.
 * Whether an IPv4-mapped IPv6 address can be used to handle both IPv4 connections and IPv6 connections is determined by system configuration. Some tools, like Apache server, have the option `-—enable-v4-mapped` to change the behavior, should we do the same?
-* To listen to all interfaces, just use 0.0.0.0:8008 or [::1]:8080; alternative syntax just adds unnecessary complexity.
+* To listen to all interfaces, just use `0.0.0.0:8080`, `[::]:8080` or `:8080`.
