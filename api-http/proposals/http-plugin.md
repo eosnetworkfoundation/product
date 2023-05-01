@@ -94,12 +94,20 @@ http-server-address   = http-category-address
 http-category-address = chain_ro,127.0.0.1:8081
 http-category-address = chain_ro,localhost:9090
 http-category-address = chain_rw,[::1]:8082
-http-category-address = net_ro,[::1]:8081
+http-category-address = net_ro,127.0.0.1:8081
+http-category-address = net_rw,[::]:8083 
 http-category-address = producer_ro,/tmp/absolute_unix_path.sock
-http-category-address = wallet,./relative/unix_path.sock
-http-category-address = snapshot_rw,./relative/unix_path.sock
-http-category-address = trace_api,                               # disable
-````
+http-category-address = producer_rw,./relative/unix_path.sock
+http-category-address = snapshot,./relative/unix_path.sock
+```
+
+A single `hostname:port` specification can be used by multiple categories, as of the case for `127.0.0.1:8081` in above example. However, two specifications having the same port with different hostname strings are always considered as configuration error regardless whether they can be resolved into the same set of IP addresses. For example, the following configuration are invalid.
+
+```
+http-category-address = chain_ro,127.0.0.1:8081
+http-category-address = chain_rw,localhost:8081 # error, 127.0.0.1 and localhost are different
+```
+
 For the node category, it is NOT user configurable because it will be available for all listened http addresses.
 
 For backward compatibility, the HTTP category facility has to be opted in by specifying `http-server-address = http-category-address` explicitly. 
@@ -181,5 +189,15 @@ It will be converted as follows in this proposal
   - unix socket path (must starts with '/' or './')
 
 * In the case of the hostname, the IP address is resolved by ARP, *ALL* resolved addresses will be listened to.
-* Whether an IPv4-mapped IPv6 address can be used to handle both IPv4 connections and IPv6 connections is determined by system configuration. Some tools, like Apache server, have the option `-—enable-v4-mapped` to change the behavior, should we do the same?
 * To listen to all interfaces, just use `0.0.0.0:8080`, `[::]:8080` or `:8080`.
+
+### How to handle IPv4-mapped IPv6?
+There are a couple of options:
+  - Always use system default. That is, on Linux where IPv4-mapped IPv6 is enabled by default, `[::]:8080` will listen to both ipv4 and ipv6. 
+  - Always disable IPv4-mapped IPv6. That is, `[::]:8080` will only listen to ipv6; `:8080` will listen on both ipv4 and ipv6.
+  - Use system default and provide option to be more specific, like `[::],ip-v6-only=on` or `[::],ip-v6-only=off`.
+
+Apache server adopts the first option and provides a global "--enable-v4-mapped" option such that the behavior on platform where IPv4-mapped IPv6 is disabled by default can match others.
+
+Ngnix, on the other hand, provides `ip-v6-only=on` and `ip-v6-only=off` to be specific, yet it uses `ip-v6-only=off` by default regardless of the platform it runs on since version 1.3.4.  
+  
