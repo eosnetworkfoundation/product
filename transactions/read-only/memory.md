@@ -471,9 +471,9 @@ from mirroring to `mprotect()`.
 
 We plan to
 - Gather memory usage from existing contracts.
-  * Select most recent one year's EOS Mainnet snapshots and block logs.
-  * Modify `eosvmoc::executor::execute()` to report `cb->current_linear_memory_pages` at the end of execution.
-  * Replay the block logs.
+  * Download a snapshot of the beginning of 2022 from mainnet.
+  * Modify `libraries/chain/webassembly/runtimes/eos-vm-oc/gs_seg_helpers.c/eos_vm_oc_grow_memory()` to keep track the largest `current_linear_memory_page` the current code uses, and modify `eosvmoc::executor::execute()` to report `current_linear_memory_pages` at the end of the action execution.
+  * Start from the snapshot and sync with a mainnet peer node.
   * Find max and 95 percentile of current_linear_memory_pages. This is to make sure vast majority of executions do not need using `mprotect`.
 - Add a private compile option defining the threshold number of pages where the transition between the two approaches occurs.
   * In `chain/CMakefile`, set a private variable `max_num_slices` with the value of the 95 percentile of current_linear_memory_pages, and pass it to using `add_definitions` to C++ code.
