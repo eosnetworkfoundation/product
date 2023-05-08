@@ -270,11 +270,15 @@ flowchart TD
 ```
 
 ### Issues
-#### Same Contract Parsed Multiple Times in EOS-VM and EOS-VM-JIT
-In parallel EOS-VM and EOS-VM-JIT execution, each thread uses a separate WASM interface, which results in the same
-contract parsed multiple times. It is desirable to share the same parsed code -- module.
+#### Multiple WASM Interfaces
+In parallel EOS-VM and EOS-VM-JIT execution, each thread uses a separate WASM interface. This causes several issues:
+- The same contract are parsed multiple times on different threads.
+- The multiple WASM interfaces and associated thread data make code complicated and hard to reason.
+- It is not consistent with EOS-VM-OC where only one WASM interface is required.
 
-However, module stores global values (`current` in `global_variable`) directly.
+#### Module is not thread safe
+It is desirable to share the same parsed code -- module among threads.
+Currently, however, a module stores global values (`current` in `global_variable`) directly.
 It is possible multiple threads modify the same global at the same time.
 This needs to be resolved before the same parsed code is shared among the same contract.
 
@@ -405,11 +409,13 @@ non-deterministic time to get the transaction result.
 
 ## Proposed Solutions
 
-### Compile the Same Contract Only Once in EOS-VM and EOS-VM-JIT
+### Use Single WASM Interface and Compile the Same Contract Only Once in EOS-VM and EOS-VM-JIT
 
-To avoid parsing contract code multiple times, it is proposed the module is shared by multiple execution contexts.
+To prevent issues of multiple WASM interfaces discussed above, it is proposed a single WASM interface is used.
+
+To avoid parsing contract code multiple times, a module is to be shared by multiple execution contexts.
 After a code is first parsed and a module is created, the module is cached, until removed from the cache when last block
-its code was used is before LIB and its linked execution context is not running. An new backend constructor
+its code was used is before LIB and its linked execution context is not running. A new backend constructor
 takes a module as an input and skips parsing.
 
 To resolve the issue of potential multiple threads modifying the same global stored in the module,
@@ -424,44 +430,32 @@ be modified to access globals in linear memory.
 flowchart TD
    subgraph module[module]
    end
-%%  subgraph wamsifs
-%%  direction LR
-   subgraph wasmif_1
+   subgraph wasmif
       subgraph backend_1[backend]
          subgraph execution_ctx_1[execution context]
             direction TB
-  %%          subgraph module1[module]
-  %%          end
             subgraph LM1[linear memory]
             end
             subgraph Stack1[stack]
             end
-   %%         module1 ~~~ LM1
             LM1 ~~~ Stack1
          end
       end
-   end
 
-   subgraph wasmif_2
       subgraph backend_2[backend]
          subgraph execution_ctx_2[execution context]
             direction TB
-     %%       subgraph module2[module]
-     %%      end
             subgraph LM2[linear memory]
             end
             subgraph Stack2[stack]
             end
-     %%     module2 ~~~ LM2
             LM2 ~~~ Stack2
          end
       end
    end   
-   wasmif_1 ~~~ wasmif_2
-%%   end
-%%   module1 --- module2
-   module --> wasmif_1
-   module --> wasmif_2
+   backend_1 ~~~ backend_2
+   module --> backend_1
+   module --> backend_2
    
 ```
 
@@ -471,12 +465,12 @@ from mirroring to `mprotect()`.
 
 We plan to
 - Gather memory usage from existing contracts.
-  * Download a snapshot of the beginning of 2022 from mainnet.
-  * Modify `libraries/chain/webassembly/runtimes/eos-vm-oc/gs_seg_helpers.c/eos_vm_oc_grow_memory()` to keep track the largest `current_linear_memory_page` the current code uses, and modify `eosvmoc::executor::execute()` to report `current_linear_memory_pages` at the end of the action execution.
+  * Download a January 2022 snapshot from the mainnet.
+  * Modify `libraries/chain/webassembly/runtimes/eos-vm-oc/gs_seg_helpers.c/eos_vm_oc_grow_memory()` to keep track the largest number of linear memory the current code uses, and modify `eosvmoc::executor::execute()` to report the larget number at the end of the action execution.
   * Start from the snapshot and sync with a mainnet peer node.
-  * Find max and 95 percentile of current_linear_memory_pages. This is to make sure vast majority of executions do not need using `mprotect`.
+  * Find max and 95 percentile of number of linear memory pages used by all codes. This is to make sure vast majority of executions do not need using `mprotect`.
 - Add a private compile option defining the threshold number of pages where the transition between the two approaches occurs.
-  * In `chain/CMakefile`, set a private variable `max_num_slices` with the value of the 95 percentile of current_linear_memory_pages, and pass it to using `add_definitions` to C++ code.
+  * In `chain/CMakefile`, set a private variable `max_num_slices` with the value of the 95 percentile, and pass it to C++ code using `add_definitions`.
   * Use `max_num_slices` to set up memory slices in `memory::memory()`.
 
 ### Calculate Virtual Memory Available to User Space Accurately
