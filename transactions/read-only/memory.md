@@ -419,12 +419,10 @@ its code was used is before LIB and its linked execution context is not running.
 takes a module as an input and skips parsing.
 
 To resolve the issue of potential multiple threads modifying the same global stored in the module,
-globals storage is moved out to the end of linear memory. Protection will be put into place to prevent this section is accessed
-by contract code.
-
+globals are moved out of module and placed in execution context.
 
 Functions `set_global` and `get_global` in `execution_context.hpp`, `emit_get_global` and `emit_set_global` in `x86_64.hpp` will
-be modified to access globals in linear memory.
+be modified to access globals in execution context.
 
 ```mermaid
 flowchart TD
