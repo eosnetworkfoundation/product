@@ -64,7 +64,7 @@ Roadmap for the development of a performance testing methodology for EOS EVM.
       - server
     - Location to provide visualizations
       - Needs access to wherever reports and logs are stored
-      - Needs capability to update and interact with graphs as new datapoints are provided (could be static auto generated graphs)
+      - Needs capability to update and interact with graphs as new data points are provided (could be static auto generated graphs)
       - Visualizations make the most sense on longer term initiatives where incremental performance increase or decreases are of value.
         For instance:
         - on each commit/PR merge into main to see how main's performance improvement or degradation
