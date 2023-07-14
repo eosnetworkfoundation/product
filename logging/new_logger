@@ -1,0 +1,28 @@
+# New source code logger
+
+## Current logger
+
+* fc::logger
+  ** Console logging both stderr & stdout
+  ** GELF logging
+  ** Deep-mind logging to a file
+  ** Works with fc::variant for logging any FC_REFLECT type
+  
+Could enhance fc::logger to add file support, file rotation, async logging, filtering, etc. OR switch to a third-party open source logger.
+
+## New logger
+
+Evaluate existing open source log libraries. `spdlog` (https://github.com/gabime/spdlog) has been used by core team in the past on other projects.
+
+## Integration
+
+`spdlog` uses `fmt` library which is part of C++20 or is available as a separate third-party library (https://github.com/fmtlib/fmt).
+The switch to `fmt` instead of `fc::variant` will require providing a mapping between FC_REFLECT and `fmt`. 
+A start of that work can be found at 
+* https://github.com/EOSIO/fc/tree/kjh-epe-291-fc
+* https://github.com/EOSIO/fc/commits/jjz-epe-2012-new-logging-library-fc
+* https://github.com/EOSIO/eos/tree/kjh-epe-291-log
+
+Existing fc_xlog macros could be updated to use `spdlog` or just use spdlog macros directly.
+  
+`spdlog` does not include a GELF logger. However, since our current GELF logger is hand-written it should be simple enough to add a new sink type to `spdlog`.
