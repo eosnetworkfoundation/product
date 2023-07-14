@@ -1,0 +1,20 @@
+# Trace API Plugin enhancements
+
+## ABI Support
+
+Currently `trace_api_plugin` only supports decoding `action` and `return_value` data via command line provided `trace-rpc-abi` files. This requires manually 
+providing new ABI file any time the ABI changes.
+Add using on-chain ABI at time of action execution for decoding of the `action` and `return_value` data.
+Provide option to not track ABI if user does not require data expanded via ABI. ABI decoding should be the default.
+
+## Index transactions by transaction id for quicker retrieval.
+
+Currently `trace_api_plugin` does a sequential scan for `/v1/trace_api/get_transaction_trace`. Add an index for faster lookup.
+
+## Investigate removing `fsync`
+
+We do not use `fsync` for other file writing. Determine if `fflush` is sufficient.
+
+## Use SQLite for storage
+
+Usage would simplify the index on transaction issue and provide easier storage/lookup of ABI. Also solves the `fsync` question.
