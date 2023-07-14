@@ -24,3 +24,6 @@ Obviously relying on undocumented behavior is yucky. But realistically the risk 
 
 This could be mitigated by including a fixed version of boost within chainbase. Something we've noodled on a little before and may be required for performance improvement in other proposal.
 
+### use process RAM for uncommitted changes
+
+Currently chainbase uses the mmap memory for everything, including uncommitted changes that are coming with speculative transactions. But the uncommitted changes don't have to be in the state memory, and it makes sense to store them in normal malloc memory. This would reduce the I/O load on the state storage significantly, so that we would probably not need tmpfs any longer.
