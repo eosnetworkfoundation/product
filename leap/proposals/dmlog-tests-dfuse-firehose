@@ -1,0 +1,52 @@
+# Proposal to provide a test suite to ensure that compatibility with tooling that depends on DMLOG
+
+## Problem
+Important community tools depend on DMLOG messages, but there is no test suite to ensure continuous compatibility as changes/new
+releases are made for Leap. Specifically to ensure that DMLOG is working in Leap, and that what/how it logs hasn't changed in a
+breaking way.
+
+## Opportunity
+Protect compatibility with critical 3rd party tools with a test suite around DMLOG and it's instrumentation in Leap.
+
+The "Battlefield" repo originally written by the dfuse team, and now hosted by EOS Nation can serve as an example of the kinds of tests
+that would be valuable to include. [Battlefield EOSIO](https://github.com/EOS-Nation/battlefield-eosio/)
+
+## Target Audience
+3rd Party Community Tools, and the developers that depend on them.
+
+There are many important community tools that depend on DMLOG messages as critical functionality. Categorical examples include:
+
+- legacy firehose/dfuse
+- new firehose/substreams
+- "dfuse light" gaming sdk
+
+Examples of specific solutions that depend on DMLOG messages include:
+
+- legacy dfuse/firehose (EOS Nation)
+- new firehose/substreams (EOS Nation)
+- Hypha DAO via firehose (Hypha DAO)
+- Antelope IBC via firehose (UX/Titan)
+- Zeus DAPP SDK via firehose (LiquidApps aka @natpd)
+- dfuse light gaming sdk directly reading DMLOG (Liquiid aka @cmadh)
+
+## Strategic Alignment
+This proposal indirectly contributes to making DAPP development easier on EOS and Antelope based chains. The tools that depend on
+DMLOG and the related instrumentation make it easier for developers to produce applications that need fast, convnient, and reliable
+access to blockchain state history.
+
+## Success Definition
+A test suite that runs quickly with a high degree of coverage for the DMLOG messages that dfuse/dfuse-light/firehose/substreams
+implementations depend on.
+
+## Reference Material
+docs for new firehose/substreams:
+
+- https://firehose.streamingfast.io
+- https://substreams.streamingfast.io
+
+new codebase for new firehose/substreams on Antelope:
+
+- https://github.com/EOS-Nation/firehose-antelope/
+
+Battlefield test suite:
+- https://github.com/EOS-Nation/battlefield-eosio/
