@@ -461,31 +461,9 @@ flowchart TD
 To conserve virtual memory to support more threads, We need to reduce the threshold where EOS VM OC transitions
 from mirroring to `mprotect()`.
 
-We plan to
-- Gather memory usage from existing contracts.
-  * Download a January 2022 snapshot from the mainnet.
-  * Modify `libraries/chain/webassembly/runtimes/eos-vm-oc/gs_seg_helpers.c/eos_vm_oc_grow_memory()` to keep track the largest number of linear memory the current code uses, and modify `eosvmoc::executor::execute()` to report the larget number at the end of the action execution.
-  * Start from the snapshot and sync with a mainnet peer node.
-  * Find max and 95 percentile of number of linear memory pages used by all codes. This is to make sure vast majority of executions do not need using `mprotect`.
-- Add a private compile option defining the threshold number of pages where the transition between the two approaches occurs.
-  * In `chain/CMakefile`, set a private variable `max_num_slices` with the value of the 95 percentile, and pass it to C++ code using `add_definitions`.
-  * Use `max_num_slices` to set up memory slices in `memory::memory()`.
+We have collected OC linear memory usgae on the EOS Mainnet (https://github.com/AntelopeIO/leap/issues/1159) for the period of April 12, 2023 to May 23, 2023. For EVM contracts, the largest linear memory used is 163pages * 64KB; for native contracts, the larget is 94pages * 64KB.
 
-### Calculate Virtual Memory Available to User Space Accurately
-We plan to use `/proc/self/maps`, find the difference of addresses between `nodeos` program text and `vsyscall` and deduct the total
-size of all memory segments.
-
-A memory maps look like
-```
-560e88dc8000-560e88dcc000 rw-p 04dee000 103:03 20582300                  /home/lh/work/leap-4-0-vmoc-main-thread/build/bin/nodeos
-560e88dcc000-560e88df7000 rw-p 00000000 00:00 0
-560e8a03d000-560e8a107000 rw-p 00000000 00:00 0                          [heap]
-...
-7ffdceec3000-7ffdceee4000 rw-p 00000000 00:00 0                          [stack]
-7ffdcefe2000-7ffdcefe6000 r--p 00000000 00:00 0                          [vvar]
-7ffdcefe6000-7ffdcefe8000 r-xp 00000000 00:00 0                          [vdso]
-ffffffffff600000-ffffffffff601000 --xp 00000000 00:00 0                  [vsyscall]
-```
+We plan to keep 529 slices for the main-thread memory (currently used for anything other then read-only transaction threads); this ensures maximum performance for EVM transactions. For each read-only thread, we configure 10 slices (10 slices covers 99% native actions and 56% EVM actions, from data in https://github.com/AntelopeIO/leap/issues/1159). We plan to set the maximum limit of read-only threads to 256. With this setup, OC's main thread uses 4TB VM (by 529 slices) and the 256 read-only threads uses 20TB VM (from 256 * 10 * 8GB). The total is 24TB which is 18% of total VM space (128TB).
 
 ### Fallback to EOS-VM-Interpreter or EOS-VM-JIT When OC Compiled Code is Not Available
 At `nodeos` startup, if EOS-VM-OC is enabled,
