@@ -41,9 +41,9 @@ class [[eosio::contract]] mainContract : public eosio::contract {
 public:
    [[eosio::action]] void mainAction() {
       ... // Do something1
-      eosio::action( permission_level1, "code1"_n, "action1"_n, data1 ).send(); // contract1 is deployed to code1
+      eosio::action( permission_level1, "code1"_n, "action1"_n, data1 ).send(); // contract1 was deployed to code1
       ... // Do something2
-      eosio::action( permission_level2, "code2"_n, "action2"_n, data2 ).send(); // contract2 is deployed to code2
+      eosio::action( permission_level2, "code2"_n, "action2"_n, data2 ).send(); // contract2 was deployed to code2
       ... // Do something3
    }
 }
@@ -221,3 +221,4 @@ Unit and integration tests will be added, covering
 ## Open Questions
 1. Initial implementation uses separate backends and execution contexts for EOS-VM-JIT and EOS-VM-Interpreter, and executors and memories for EOS-VM-OC. Later, investigate whether or not a single copy is possible to be reused for sync calls.
 2. Should we introduce `max_sync_call_action_depth`, in the same way as `max_inline_action_depth`?
+3. Should we limit the size of return value?
